@@ -143,7 +143,7 @@
                 <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm col-span-1">
                     <div>
                         <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Asset Valuation</p>
-                        <h3 id="metric-valuation" class="text-2xl font-bold mt-1 text-amber-400">$0.00</h3>
+                        <h3 id="metric-valuation" class="text-2xl font-bold mt-1 text-amber-400">₱0.00</h3>
                     </div>
                     <div class="p-3 bg-amber-500/10 rounded-lg text-amber-400"><i class="fa-solid fa-dollar-sign text-xl"></i></div>
                 </div>
@@ -228,7 +228,7 @@
         </div>
     </main>
 
-    <!-- ================= DYNAMIC BATCH INTAKE DIALOG MODAL (UPDATED GRID LAYOUT) ================= -->
+    <!-- ================= DYNAMIC BATCH INTAKE DIALOG MODAL ================= -->
     <div id="batch-intake-modal" class="fixed inset-0 z-[100] hidden bg-gray-950/85 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-gray-800 border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
             
@@ -241,10 +241,10 @@
                 <button onclick="closeIntakeModal()" class="text-gray-400 hover:text-gray-200"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <!-- Modal Body (Replaced with custom Wireframe Layout) -->
+            <!-- Modal Body (Wireframe Layout) -->
             <div class="p-6 overflow-y-auto bg-gray-900/40 space-y-6">
                 
-                <!-- Table Grid Box (Common specs) -->
+                <!-- Table Grid Box -->
                 <div class="grid grid-cols-4 border border-gray-700 divide-x divide-y divide-gray-700 bg-gray-950 rounded-lg overflow-hidden text-sm">
                     <!-- Row 1: Date -->
                     <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1 border-t-0">
@@ -301,11 +301,11 @@
                 <div class="space-y-2">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">SERIAL NUMBER / BRANDING NUMBER</h4>
                     <div id="serial-inputs-container" class="border border-gray-700 divide-y divide-gray-700 bg-gray-950 rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
-                        <!-- Dynamic serial input fields injected here -->
+                        <!-- Dynamic fields injected here -->
                     </div>
                 </div>
 
-                <!-- Action Save Button aligned Left/Mockup style -->
+                <!-- Action Save Button -->
                 <div class="pt-2 flex justify-start">
                     <button onclick="submitBatchIntake()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-8 rounded border border-emerald-700 shadow transition text-sm">
                         save
@@ -377,10 +377,9 @@
     <script>
         // ================= CONFIGURATION CREDENTIALS =================
         const SUPABASE_URL = "https://fmkwpgwhkmxcbhiepiui.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4
-";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
 
-        // Local Memory Mock Data (Fallback if Supabase is unconfigured)
+        // Local Memory Mock Data
         let mockDatabase = [
             { id: "TR-88402", size: "45/65R45", brand: "Michelin", compound: "A4", ply: "58PR", date: "2026-07-15", tread: 28.0, zone: "WH-A", status: "Warehouse Spare", cost: 65000 },
             { id: "TR-34901", size: "295/80R22.5", brand: "Bridgestone", compound: "Nylon", ply: "16PR", date: "2026-07-16", tread: 24.0, zone: "WH-B", status: "DT-101", cost: 12500 },
@@ -396,13 +395,13 @@
 
         // Safely check and initialize Supabase
         try {
-            const hasValidKeys = (SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY");
+            const hasValidKeys = (SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "PASTE_YOUR_ACTUAL_ANON_KEY_HERE" && SUPABASE_ANON_KEY !== "");
             if (hasValidKeys && window.supabase) {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 isSupabaseConfigured = true;
                 console.log("Supabase Live Database successfully linked.");
             } else {
-                console.warn("Supabase keys not found. Running fully featured sandbox mode.");
+                console.warn("Supabase keys not found or default placeholder. Running sandbox mode.");
             }
         } catch (err) {
             console.error("Initialization error:", err);
@@ -599,7 +598,7 @@
             renderDashboardData(globalCachedTires);
         }
 
-        // --- NEW DIALOG INTAKE DIALOG FLOW LOGIC (UPDATED WITH NEW STRUCTURAL INPUTS) ---
+        // --- DIALOG INTAKE DIALOG FLOW LOGIC ---
         function openIntakeModal() {
             const countInput = document.getElementById('pre-intake-count');
             if (!countInput) return;
