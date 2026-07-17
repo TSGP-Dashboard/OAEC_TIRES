@@ -26,13 +26,22 @@
                 </div>
             </div>
             
-            <!-- Connection Status Badge -->
-            <div class="flex items-center space-x-2 bg-gray-950 px-3 py-1.5 rounded-lg border border-gray-700">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Live Cloud Linked</span>
+            <!-- Quick Actions & Status -->
+            <div class="flex items-center space-x-3">
+                <!-- Open Full Inventory Button -->
+                <button onclick="openInventoryModal()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-1.5 px-3 rounded border border-amber-700 shadow-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-warehouse"></i>
+                    <span>View Whole Inventory</span>
+                </button>
+
+                <!-- Connection Status Badge -->
+                <div class="flex items-center space-x-2 bg-gray-950 px-3 py-1.5 rounded-lg border border-gray-700">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Live Cloud</span>
+                </div>
             </div>
         </div>
     </header>
@@ -42,38 +51,20 @@
         <!-- ================= LEFT: CONTROLS & OPERATIONS ================= -->
         <div class="lg:col-span-1 space-y-6">
             
-            <!-- Spares Intake Component -->
+            <!-- Spares Intake Configuration Trigger -->
             <section class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm">
                 <div class="flex items-center space-x-2 mb-4">
                     <i class="fa-solid fa-square-plus text-emerald-500"></i>
                     <h2 class="text-md font-semibold text-gray-200">New Spares Intake Check-In</h2>
                 </div>
-                <form id="intake-form" onsubmit="handleIntake(event)" class="space-y-3">
+                <form id="pre-intake-form" onsubmit="openIntakeModal(event)" class="space-y-3">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Tire Size Specification</label>
-                        <select id="intake-size" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                            <option value="45/65R45">45/65R45 (Heavy Loader)</option>
-                            <option value="295/80R22.5">295/80R22.5 (Logistics Truck)</option>
-                            <option value="265/70R17">265/70R17 (Support SUV)</option>
-                        </select>
+                        <label class="block text-xs text-gray-400 mb-1">Total Tires to be Added</label>
+                        <input type="number" id="pre-intake-count" required min="1" max="25" value="1" class="w-full bg-gray-900 border border-gray-700 rounded p-2.5 text-sm text-gray-200 focus:outline-none focus:border-amber-500 font-semibold" placeholder="Enter quantity (e.g. 5)">
                     </div>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Brand Manufacturer</label>
-                        <input type="text" id="intake-brand" required placeholder="e.g., Bridgestone, Michelin" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Unit Cost ($)</label>
-                            <input type="number" id="intake-cost" required min="1" placeholder="Value" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Intake Batch Multiplier</label>
-                            <input type="number" id="intake-multiplier" min="1" max="25" value="1" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium py-2 px-4 rounded transition flex justify-center items-center space-x-2 mt-2">
-                        <i class="fa-solid fa-dolly"></i>
-                        <span>Process Shipment Intake</span>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium py-2.5 px-4 rounded transition flex justify-center items-center space-x-2 mt-2">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Configure Batch Intake</span>
                     </button>
                 </form>
             </section>
@@ -135,21 +126,21 @@
             
             <!-- Live Warehousing Metrics -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm col-span-1">
                     <div>
                         <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Spare Units</p>
                         <h3 id="metric-spares" class="text-2xl font-bold mt-1 text-emerald-400">0</h3>
                     </div>
                     <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400"><i class="fa-solid fa-warehouse text-xl"></i></div>
                 </div>
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm col-span-1">
                     <div>
                         <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Active Fleet</p>
                         <h3 id="metric-active" class="text-2xl font-bold mt-1 text-blue-400">0</h3>
                     </div>
                     <div class="p-3 bg-blue-500/10 rounded-lg text-blue-400"><i class="fa-solid fa-truck text-xl"></i></div>
                 </div>
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex items-center justify-between shadow-sm col-span-1">
                     <div>
                         <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Asset Valuation</p>
                         <h3 id="metric-valuation" class="text-2xl font-bold mt-1 text-amber-400">$0.00</h3>
@@ -237,6 +228,130 @@
         </div>
     </main>
 
+    <!-- ================= DYNAMIC BATCH INTAKE DIALOG MODAL ================= -->
+    <div id="batch-intake-modal" class="fixed inset-0 z-[100] hidden bg-gray-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-boxes-stacked text-amber-500 text-xl"></i>
+                    <h3 class="text-lg font-bold text-gray-100">Configure Batch Intake (<span id="modal-batch-count">0</span> Tires)</h3>
+                </div>
+                <button onclick="closeIntakeModal()" class="text-gray-400 hover:text-gray-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Modal Body (Two-Column Spec Layout) -->
+            <div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-900/40">
+                <!-- Column 1: Common Specifications -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-500 border-b border-gray-800 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> Common Characteristics
+                    </h4>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Tire Size Specification</label>
+                        <select id="modal-size" onchange="autoSuggestTreadDepth()" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                            <option value="45/65R45">45/65R45 (Heavy Loader)</option>
+                            <option value="295/80R22.5">295/80R22.5 (Logistics Truck)</option>
+                            <option value="265/70R17">265/70R17 (Support SUV)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Brand Manufacturer</label>
+                        <input type="text" id="modal-brand" placeholder="e.g., Bridgestone, Michelin" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Unit Cost ($)</label>
+                            <input type="number" id="modal-cost" min="0" placeholder="e.g., 4200" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Tread Depth (mm)</label>
+                            <input type="number" step="0.1" id="modal-tread" placeholder="e.g., 28.0" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Dynamically Populated Serials -->
+                <div class="space-y-4 flex flex-col">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-500 border-b border-gray-800 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-barcode"></i> Enter Serial Numbers
+                    </h4>
+                    <div id="serial-inputs-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                        <!-- Dynamic Textbox Elements Injected Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-700 bg-gray-800 flex justify-end space-x-3">
+                <button onclick="closeIntakeModal()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium py-2 px-4 rounded transition">Cancel</button>
+                <button onclick="submitBatchIntake()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium py-2 px-5 rounded transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Commit Batch to Database</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= FULL WHOLE INVENTORY OVERVIEW WINDOW MODAL ================= -->
+    <div id="whole-inventory-modal" class="fixed inset-0 z-[90] hidden bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-6xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Window Header -->
+            <div class="p-5 border-b border-gray-700 bg-gray-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500/10 p-2 rounded text-amber-500">
+                        <i class="fa-solid fa-warehouse text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-100">Entire Tire Infrastructure Inventory</h3>
+                        <p class="text-xs text-gray-400">Total Asset Portfolio Tracker (Spares, Active Fleet, &amp; Scrapped Logs)</p>
+                    </div>
+                </div>
+                
+                <!-- Search Filter & Close Action -->
+                <div class="flex items-center space-x-3 w-full md:w-auto">
+                    <div class="relative w-full md:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="inventory-search" oninput="filterWholeInventoryTable()" placeholder="Search serials, brands..." class="w-full bg-gray-950 border border-gray-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <button onclick="closeInventoryModal()" class="text-gray-400 hover:text-gray-200 bg-gray-900 border border-gray-700 p-2 rounded-lg transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Full Table Body Wrapper -->
+            <div class="overflow-y-auto flex-1 p-6 bg-gray-900/40">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-950/60 text-gray-400 text-xs tracking-wider uppercase border-b border-gray-700">
+                            <th class="p-3 font-semibold">Serial Code</th>
+                            <th class="p-3 font-semibold">Dimension Spec</th>
+                            <th class="p-3 font-semibold">Brand / Manufacturer</th>
+                            <th class="p-3 font-semibold">Tread Depth</th>
+                            <th class="p-3 font-semibold">Storage Location</th>
+                            <th class="p-3 font-semibold">Status / Bound Chassis</th>
+                            <th class="p-3 font-semibold text-right">Asset Cost Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-inventory-table-body" class="text-sm divide-y divide-gray-700/60">
+                        <!-- Loaded Dynamically via syncEnginePipeline -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer Meta Details -->
+            <div class="p-4 border-t border-gray-700 bg-gray-800 flex justify-between items-center text-xs text-gray-400 font-mono">
+                <div>Showing <span id="modal-showing-count" class="text-amber-500 font-bold">0</span> records</div>
+                <div>Press ESC or click Cross to return to Dashboard</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Core Pipeline JavaScript Architecture -->
     <script>
         // ================= CONFIGURATION CREDENTIALS =================
@@ -250,6 +365,7 @@
 
         let focusedSerial = null;
         let brandChartInstance = null;
+        let globalCachedTires = []; // Cache to support search filtering without refetching
 
         // --- FETCH DYNAMIC CLOUD DATA ---
         async function syncEnginePipeline() {
@@ -261,7 +377,9 @@
             try {
                 let { data: tires, error } = await supabase.from('tires').select('*');
                 if (error) throw error;
-                renderDashboardData(tires || []);
+                globalCachedTires = tires || [];
+                renderDashboardData(globalCachedTires);
+                renderWholeInventoryTable(globalCachedTires);
             } catch (e) {
                 console.error("Supabase live connection error:", e.message);
             }
@@ -330,6 +448,55 @@
             renderChart(brandCounts);
         }
 
+        // --- WHOLE INVENTORY TABLE RENDER & SEARCH FILTER ---
+        function renderWholeInventoryTable(tires) {
+            const tableBody = document.getElementById('modal-inventory-table-body');
+            tableBody.innerHTML = '';
+            
+            document.getElementById('modal-showing-count').innerText = tires.length;
+
+            tires.forEach(tire => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-700/45 bg-gray-900/10 hover:bg-gray-800/50 transition";
+                
+                row.innerHTML = `
+                    <td class="p-3.5 font-mono text-amber-500 font-semibold">${tire.id}</td>
+                    <td class="p-3.5 text-gray-300">${tire.size}</td>
+                    <td class="p-3.5 text-gray-300">${tire.brand}</td>
+                    <td class="p-3.5 font-mono text-gray-400">${Number(tire.tread).toFixed(1)} mm</td>
+                    <td class="p-3.5"><span class="px-2.5 py-1 text-xs font-mono rounded bg-gray-950 border border-gray-700 text-gray-300">${tire.zone}</span></td>
+                    <td class="p-3.5">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded ${tire.status === 'Warehouse Spare' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">
+                            ${tire.status}
+                        </span>
+                    </td>
+                    <td class="p-3.5 text-right font-mono text-emerald-400">$${Number(tire.cost).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function filterWholeInventoryTable() {
+            const searchTerm = document.getElementById('inventory-search').value.toLowerCase().trim();
+            const filtered = globalCachedTires.filter(tire => {
+                return tire.id.toLowerCase().includes(searchTerm) || 
+                       tire.brand.toLowerCase().includes(searchTerm) || 
+                       tire.size.toLowerCase().includes(searchTerm) || 
+                       tire.status.toLowerCase().includes(searchTerm);
+            });
+            renderWholeInventoryTable(filtered);
+        }
+
+        function openInventoryModal() {
+            document.getElementById('inventory-search').value = '';
+            renderWholeInventoryTable(globalCachedTires);
+            document.getElementById('whole-inventory-modal').classList.remove('hidden');
+        }
+
+        function closeInventoryModal() {
+            document.getElementById('whole-inventory-modal').classList.add('hidden');
+        }
+
         function updateZoneProgress(elementId, value) {
             const capped = Math.min(value, 25);
             const percentage = (capped / 25) * 100;
@@ -343,27 +510,73 @@
             syncEnginePipeline();
         }
 
-        // --- SUPABASE DIRECT OPERATION MUTATIONS ---
-        async function handleIntake(e) {
+        // --- NEW DIALOG INTAKE DIALOG FLOW LOGIC ---
+        function openIntakeModal(e) {
             e.preventDefault();
-            const size = document.getElementById('intake-size').value;
-            const brand = document.getElementById('intake-brand').value.trim();
-            const cost = parseFloat(document.getElementById('intake-cost').value);
-            const multiplier = parseInt(document.getElementById('intake-multiplier').value) || 1;
+            const count = parseInt(document.getElementById('pre-intake-count').value);
+            if (!count || count < 1) return alert("Enter a valid batch count.");
 
+            document.getElementById('modal-batch-count').innerText = count;
+            
+            // Build dynamic text inputs for serial keys
+            const container = document.getElementById('serial-inputs-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const autoMockSerial = "TR-" + Math.floor(10000 + Math.random() * 90000);
+                container.innerHTML += `
+                    <div>
+                        <label class="block text-[11px] text-gray-400 mb-0.5">Serial / Tag ID #${i}</label>
+                        <input type="text" required value="${autoMockSerial}" class="batch-serial-input w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500 font-mono">
+                    </div>
+                `;
+            }
+
+            // Set initial parameters for common characteristics
+            autoSuggestTreadDepth();
+            
+            // Show Modal Window
+            document.getElementById('batch-intake-modal').classList.remove('hidden');
+        }
+
+        function closeIntakeModal() {
+            document.getElementById('batch-intake-modal').classList.add('hidden');
+        }
+
+        function autoSuggestTreadDepth() {
+            const size = document.getElementById('modal-size').value;
+            const treadInput = document.getElementById('modal-tread');
+            treadInput.value = (size === "45/65R45") ? "28.0" : "24.0";
+        }
+
+        // --- SUPABASE DIRECT OPERATION MUTATIONS ---
+        async function submitBatchIntake() {
+            const size = document.getElementById('modal-size').value;
+            const brand = document.getElementById('modal-brand').value.trim();
+            const cost = parseFloat(document.getElementById('modal-cost').value);
+            const tread = parseFloat(document.getElementById('modal-tread').value);
+
+            if (!brand) return alert("Please specify a Brand Manufacturer.");
+            if (isNaN(cost) || cost < 0) return alert("Please specify a valid Unit Cost.");
+            if (isNaN(tread) || tread < 0) return alert("Please specify a valid Starting Tread Depth.");
+
+            // Resolve target warehouse destination zones
             let zone = "WH-C";
             if (size === "45/65R45") zone = "WH-A";
             if (size === "295/80R22.5") zone = "WH-B";
 
+            // Extract serial inputs
+            const inputs = document.querySelectorAll('.batch-serial-input');
             let incomingItems = [];
-            for (let i = 0; i < multiplier; i++) {
-                const generatedId = "TR-" + Math.floor(10000 + Math.random() * 90000);
+            
+            for (let input of inputs) {
+                const serial = input.value.trim();
+                if (!serial) return alert("All configured items must contain an active serial tag.");
                 incomingItems.push({
-                    id: generatedId,
-                    size,
-                    brand,
-                    tread: size === "45/65R45" ? 28.0 : 24.0,
-                    zone,
+                    id: serial,
+                    size: size,
+                    brand: brand,
+                    tread: tread,
+                    zone: zone,
                     status: "Warehouse Spare",
                     cost: cost
                 });
@@ -373,9 +586,10 @@
             if (error) {
                 alert("Supabase Insert Failed: " + error.message);
             } else {
-                document.getElementById('intake-brand').value = '';
-                document.getElementById('intake-cost').value = '';
-                document.getElementById('intake-multiplier').value = 1;
+                // Success - clean fields & sync
+                document.getElementById('modal-brand').value = '';
+                document.getElementById('modal-cost').value = '';
+                closeIntakeModal();
                 syncEnginePipeline();
             }
         }
@@ -396,7 +610,6 @@
         async function runRetreading() {
             if (!focusedSerial) return alert('Select an asset target from the registry.');
 
-            // Determine target tread baseline based on selected asset's dimensions
             let targetTread = 24.0;
             let { data, error: selectError } = await supabase.from('tires').select('size').eq('id', focusedSerial).single();
             
@@ -461,6 +674,13 @@
                 }
             });
         }
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeInventoryModal();
+            }
+        });
 
         // Runtime Bootstrapper
         window.onload = () => {
