@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tyre-Track Pro - Inventory Core</title>
+    <title>Tyre-Track Pro - Cloud Inventory Core</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -22,16 +22,17 @@
                 <i class="fa-solid fa-truck-monster text-amber-500 text-3xl"></i>
                 <div>
                     <h1 class="text-xl font-bold tracking-wide">Tyre-Track Pro</h1>
-                    <p class="text-xs text-gray-400">Inventory Core Engine v2.1</p>
+                    <p class="text-xs text-gray-400">Inventory Core Engine v2.1 • Cloud Live Mode</p>
                 </div>
             </div>
             
-            <!-- Multi-Engine Database Router Switcher -->
-            <div class="bg-gray-950 p-1.5 rounded-lg border border-gray-700 flex items-center space-x-1">
-                <span class="text-xs text-gray-400 px-2 font-mono uppercase tracking-wider">Engine:</span>
-                <button onclick="switchEngine('demo')" id="btn-engine-demo" class="px-3 py-1 text-xs font-medium rounded transition bg-amber-500 text-gray-950">Demo</button>
-                <button onclick="switchEngine('local')" id="btn-engine-local" class="px-3 py-1 text-xs font-medium rounded transition text-gray-400 hover:text-gray-200">Local Live</button>
-                <button onclick="switchEngine('cloud')" id="btn-engine-cloud" class="px-3 py-1 text-xs font-medium rounded transition text-gray-400 hover:text-gray-200">Cloud DB</button>
+            <!-- Connection Status Badge -->
+            <div class="flex items-center space-x-2 bg-gray-950 px-3 py-1.5 rounded-lg border border-gray-700">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Live Cloud Linked</span>
             </div>
         </div>
     </header>
@@ -247,62 +248,23 @@
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
             : null;
 
-        // --- ARCHITECTURE LOCAL ENGINE CACHE & MOCKS ---
-        let currentEngine = 'demo';
         let focusedSerial = null;
         let brandChartInstance = null;
 
-        let STATIC_DEMO_TIRES = [
-            { id: "TR-90210", size: "45/65R45", brand: "Bridgestone", tread: 26.5, zone: "WH-A", status: "Warehouse Spare", cost: 4200 },
-            { id: "TR-40812", size: "295/80R22.5", brand: "Michelin", tread: 22.0, zone: "WH-B", status: "DT-101", cost: 650 },
-            { id: "TR-77103", size: "265/70R17", brand: "Goodyear", tread: 11.5, zone: "WH-C", status: "Warehouse Spare", cost: 280 },
-            { id: "TR-11940", size: "45/65R45", brand: "Michelin", tread: 14.0, zone: "WH-A", status: "Warehouse Spare", cost: 4950 }
-        ];
-
-        // --- PIPELINE MATRIX ENGINE ROUTER CONTROLLERS ---
-        function switchEngine(mode) {
-            currentEngine = mode;
-            ['demo', 'local', 'cloud'].forEach(m => {
-                const btn = document.getElementById(`btn-engine-${m}`);
-                if (m === mode) {
-                    btn.className = "px-3 py-1 text-xs font-medium rounded transition bg-amber-500 text-gray-950";
-                } else {
-                    btn.className = "px-3 py-1 text-xs font-medium rounded transition text-gray-400 hover:text-gray-200";
-                }
-            });
-            focusedSerial = null;
-            document.getElementById('focused-serial-display').innerText = "NONE";
-            syncEnginePipeline();
-        }
-
+        // --- FETCH DYNAMIC CLOUD DATA ---
         async function syncEnginePipeline() {
-            let data = [];
-            if (currentEngine === 'demo') {
-                data = [...STATIC_DEMO_TIRES];
-            } else if (currentEngine === 'local') {
-                try {
-                    let response = await fetch('http://localhost:3000/api/tires');
-                    data = await response.json();
-                } catch (e) {
-                    console.warn("Local Live API disconnected.");
-                    data = [];
-                }
-            } else if (currentEngine === 'cloud') {
-                if (!supabase) {
-                    console.error("Supabase client is unconfigured. Fill out your credentials keys.");
-                    alert("Please provide valid Supabase credentials inside the script parameters.");
-                    return;
-                }
-                try {
-                    let { data: tires, error } = await supabase.from('tires').select('*');
-                    if (error) throw error;
-                    data = tires || [];
-                } catch (e) {
-                    console.error("Supabase live connection error:", e.message);
-                    data = [];
-                }
+            if (!supabase) {
+                console.error("Supabase client is unconfigured. Fill out your credentials keys.");
+                alert("Please configure your custom Supabase URL and Anon Key inside the script configuration block.");
+                return;
             }
-            renderDashboardData(data);
+            try {
+                let { data: tires, error } = await supabase.from('tires').select('*');
+                if (error) throw error;
+                renderDashboardData(tires || []);
+            } catch (e) {
+                console.error("Supabase live connection error:", e.message);
+            }
         }
 
         // --- DASHBOARD DATA TRANSFORMATION & RENDER ---
@@ -381,7 +343,7 @@
             syncEnginePipeline();
         }
 
-        // --- ENGINE MUTATION PIPELINES ---
+        // --- SUPABASE DIRECT OPERATION MUTATIONS ---
         async function handleIntake(e) {
             e.preventDefault();
             const size = document.getElementById('intake-size').value;
@@ -407,25 +369,15 @@
                 });
             }
 
-            if (currentEngine === 'demo') {
-                STATIC_DEMO_TIRES.push(...incomingItems);
-            } else if (currentEngine === 'cloud') {
-                const { error } = await supabase.from('tires').insert(incomingItems);
-                if (error) alert("Supabase Insert Failed: " + error.message);
-            } else if (currentEngine === 'local') {
-                for (let item of incomingItems) {
-                    await fetch('http://localhost:3000/api/tires', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(item)
-                    });
-                }
+            const { error } = await supabase.from('tires').insert(incomingItems);
+            if (error) {
+                alert("Supabase Insert Failed: " + error.message);
+            } else {
+                document.getElementById('intake-brand').value = '';
+                document.getElementById('intake-cost').value = '';
+                document.getElementById('intake-multiplier').value = 1;
+                syncEnginePipeline();
             }
-
-            document.getElementById('intake-brand').value = '';
-            document.getElementById('intake-cost').value = '';
-            document.getElementById('intake-multiplier').value = 1;
-            syncEnginePipeline();
         }
 
         async function executeDispatch() {
@@ -433,73 +385,46 @@
             const targetFleet = document.getElementById('dispatch-fleet-select').value;
             if (!tireId) return alert('Select a valid warehouse spare element.');
 
-            if (currentEngine === 'demo') {
-                let index = STATIC_DEMO_TIRES.findIndex(t => t.id === tireId);
-                if (index !== -1) STATIC_DEMO_TIRES[index].status = targetFleet;
-            } else if (currentEngine === 'cloud') {
-                const { error } = await supabase.from('tires').update({ status: targetFleet }).eq('id', tireId);
-                if (error) alert("Supabase Dispatch Failed: " + error.message);
-            } else if (currentEngine === 'local') {
-                await fetch(`http://localhost:3000/api/dispatch`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: tireId, status: targetFleet })
-                });
+            const { error } = await supabase.from('tires').update({ status: targetFleet }).eq('id', tireId);
+            if (error) {
+                alert("Supabase Dispatch Failed: " + error.message);
+            } else {
+                syncEnginePipeline();
             }
-            syncEnginePipeline();
         }
 
         async function runRetreading() {
             if (!focusedSerial) return alert('Select an asset target from the registry.');
 
-            if (currentEngine === 'demo') {
-                let index = STATIC_DEMO_TIRES.findIndex(t => t.id === focusedSerial);
-                if (index !== -1) {
-                    STATIC_DEMO_TIRES[index].tread = STATIC_DEMO_TIRES[index].size === "45/65R45" ? 28.0 : 24.0;
-                }
-            } else if (currentEngine === 'cloud') {
-                // Determine target tread baseline
-                let targetTread = 24.0;
-                let { data } = await supabase.from('tires').select('size').eq('id', focusedSerial).single();
-                if (data && data.size === "45/65R45") targetTread = 28.0;
+            // Determine target tread baseline based on selected asset's dimensions
+            let targetTread = 24.0;
+            let { data, error: selectError } = await supabase.from('tires').select('size').eq('id', focusedSerial).single();
+            
+            if (selectError) return alert("Could not resolve asset data.");
+            if (data && data.size === "45/65R45") targetTread = 28.0;
 
-                const { error } = await supabase.from('tires').update({ tread: targetTread }).eq('id', focusedSerial);
-                if (error) alert("Supabase Maintenance Update Failed: " + error.message);
-            } else if (currentEngine === 'local') {
-                await fetch(`http://localhost:3000/api/tires/retread`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: focusedSerial })
-                });
+            const { error } = await supabase.from('tires').update({ tread: targetTread }).eq('id', focusedSerial);
+            if (error) {
+                alert("Supabase Maintenance Update Failed: " + error.message);
+            } else {
+                syncEnginePipeline();
             }
-            syncEnginePipeline();
         }
 
         async function logAsScrap() {
             if (!focusedSerial) return alert('Select an asset target from the registry.');
 
-            if (currentEngine === 'demo') {
-                let index = STATIC_DEMO_TIRES.findIndex(t => t.id === focusedSerial);
-                if (index !== -1) {
-                    STATIC_DEMO_TIRES[index].status = "Scrapped Asset";
-                    STATIC_DEMO_TIRES[index].zone = "WH-C";
-                    STATIC_DEMO_TIRES[index].cost = 0;
-                }
-            } else if (currentEngine === 'cloud') {
-                const { error } = await supabase.from('tires')
-                    .update({ status: "Scrapped Asset", zone: "WH-C", cost: 0 })
-                    .eq('id', focusedSerial);
-                if (error) alert("Supabase Scrap Execution Failed: " + error.message);
-            } else if (currentEngine === 'local') {
-                await fetch(`http://localhost:3000/api/scrap`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: focusedSerial })
-                });
+            const { error } = await supabase.from('tires')
+                .update({ status: "Scrapped Asset", zone: "WH-C", cost: 0 })
+                .eq('id', focusedSerial);
+                
+            if (error) {
+                alert("Supabase Scrap Execution Failed: " + error.message);
+            } else {
+                focusedSerial = null;
+                document.getElementById('focused-serial-display').innerText = "NONE";
+                syncEnginePipeline();
             }
-            focusedSerial = null;
-            document.getElementById('focused-serial-display').innerText = "NONE";
-            syncEnginePipeline();
         }
 
         // --- CHART.JS VISUALIZATION ENGINE ---
