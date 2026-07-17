@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,218 +11,250 @@
     <!-- Chart.js for inventory analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0b0f19;
-            color: #f3f4f6;
-        }
-        .code-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        /* Custom styled scrollbars */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #090d16;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
+            background: #1e293b;
+            border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #334155;
         }
-        /* Gradient glows */
-        .glow-glow {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+        .neon-glow-amber {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+        }
+        .neon-glow-emerald {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+        .axle-dashed {
+            background-image: linear-gradient(to bottom, #1e293b 50%, rgba(255,255,255,0) 0%);
+            background-position: right;
+            background-size: 2px 10px;
+            background-repeat: repeat-y;
         }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col">
+<body class="h-full bg-[#070a13] text-slate-100 flex flex-col font-sans overflow-hidden antialiased">
 
     <!-- Top Enterprise Header -->
-    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shrink-0 z-30">
+    <header class="bg-[#0b0f19] border-b border-slate-800/80 px-6 py-4 flex items-center justify-between shrink-0 z-30 shadow-lg shadow-black/30">
         <div class="flex items-center space-x-4">
-            <div class="bg-amber-500 text-slate-950 p-2.5 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <div class="bg-amber-500 text-slate-950 p-2.5 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
                 <i class="fa-solid fa-boxes-stacked text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold tracking-tight text-white flex items-center font-mono">
-                    TYRE-TRACK PRO <span class="ml-2 text-xs font-semibold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">INVENTORY CORE</span>
+                <h1 class="text-base md:text-lg font-extrabold tracking-tight text-white flex items-center font-mono">
+                    TYRE-TRACK PRO <span class="ml-2 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">INVENTORY CORE</span>
                 </h1>
-                <p class="text-xs text-slate-400">Enterprise Warehouse & Rubber Allocation System</p>
+                <p class="text-[11px] text-slate-400">Enterprise Asset, Rubber Casing & Live Fleet Installation Management</p>
             </div>
         </div>
 
-        <!-- Telemetry Status bar -->
-        <div class="flex items-center space-x-6 text-sm text-slate-300">
-            <div class="flex items-center space-x-2">
-                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="font-medium text-xs md:text-sm">Warehouse Sync Active</span>
+        <div class="flex items-center space-x-4 text-sm text-slate-300">
+            <div class="hidden md:flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-medium text-xs text-slate-300">Sync Pipeline Online</span>
             </div>
-            <button onclick="openCheckInModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all shadow-md shadow-amber-500/10">
+            <button onclick="openCheckInModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 transition-all shadow-lg shadow-amber-500/15">
                 <i class="fa-solid fa-circle-plus"></i>
-                <span>Check-In New Tire</span>
+                <span>Check-In Shipment</span>
             </button>
         </div>
     </header>
 
-    <!-- Custom Action Toast Notification -->
-    <div id="toastNotification" class="fixed top-20 right-6 z-50 transform translate-x-96 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="bg-slate-900 border border-emerald-500 text-emerald-400 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 glow-glow">
-            <i class="fa-solid fa-circle-check text-lg"></i>
-            <span class="text-xs font-medium text-slate-200" id="toastMessage">Stock database updated successfully.</span>
+    <!-- Interactive Event Logger Notification Toast -->
+    <div id="toastNotification" class="fixed top-24 right-6 z-50 transform translate-x-96 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-[#0e1626] border border-amber-500/50 text-amber-400 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 neon-glow-amber">
+            <div class="bg-amber-500/10 p-1.5 rounded-lg">
+                <i id="toastIcon" class="fa-solid fa-circle-info text-md"></i>
+            </div>
+            <span class="text-xs font-semibold text-slate-100" id="toastMessage">Operational event registered.</span>
         </div>
     </div>
 
-    <!-- Main Workspace Area -->
+    <!-- Main Dynamic Workspace Grid -->
     <div class="flex-1 flex overflow-hidden">
         
-        <!-- Left Sidebar: Stock Breakdown & Analytics -->
-        <aside class="w-80 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 p-5 space-y-6 overflow-y-auto">
-            <!-- Global Inventory Overview -->
+        <!-- Left Sidebar Panel: Key KPIs, Dynamic Filters & Visual Casing Distribution -->
+        <aside class="w-80 bg-[#090c15] border-r border-slate-800/80 flex flex-col shrink-0 p-5 space-y-6 overflow-y-auto">
+            <!-- Global Inventory Stats -->
             <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Inventory Summary</label>
-                <div class="space-y-2.5">
-                    <div class="bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Spare Stock</span>
-                            <span class="text-xl font-black text-white" id="stat-total-stock">0 Units</span>
-                        </div>
-                        <i class="fa-solid fa-warehouse text-slate-600 text-lg"></i>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 font-mono">Inventory Summary</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-[#0e1322] border border-slate-800/60 p-3 rounded-xl flex flex-col justify-between">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Spare Units</span>
+                        <span class="text-xl font-extrabold text-white font-mono mt-1" id="stat-total-stock">0</span>
                     </div>
-                    <div class="bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
+                    <div class="bg-[#0e1322] border border-slate-800/60 p-3 rounded-xl flex flex-col justify-between">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Active Fleet</span>
+                        <span class="text-xl font-extrabold text-sky-400 font-mono mt-1" id="stat-active-fleet">0</span>
+                    </div>
+                    <div class="bg-[#0e1322] border border-slate-800/60 p-3 rounded-xl col-span-2 flex items-center justify-between">
                         <div>
                             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Est. Asset Value</span>
-                            <span class="text-xl font-black text-emerald-400" id="stat-total-value">$0.00</span>
+                            <span class="text-lg font-black text-emerald-400 font-mono" id="stat-total-value">$0.00</span>
                         </div>
-                        <i class="fa-solid fa-sack-dollar text-slate-600 text-lg"></i>
+                        <i class="fa-solid fa-calculator text-slate-700 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Interactive Filters -->
-            <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Filter by State</label>
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">Filter by Casing State</label>
                 <div class="space-y-1.5" id="statusFiltersGroup">
-                    <button onclick="setStatusFilter('all')" id="btn-filter-all" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-amber-500 text-slate-950">
-                        <span><i class="fa-solid fa-circle-nodes mr-2"></i>All Stock</span>
-                        <span class="px-1.5 py-0.5 rounded bg-slate-900/10 text-slate-950 font-mono text-[10px]" id="count-all">0</span>
+                    <button onclick="setStatusFilter('all')" id="btn-filter-all" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium bg-amber-500 text-slate-950 transition-all font-mono">
+                        <span><i class="fa-solid fa-circle-nodes mr-2"></i>All Warehouse Spares</span>
+                        <span class="px-1.5 py-0.5 rounded bg-slate-900/10 text-slate-950 font-bold text-[10px]" id="count-all">0</span>
                     </button>
-                    <button onclick="setStatusFilter('New')" id="btn-filter-New" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all">
-                        <span><i class="fa-solid fa-circle mr-2 text-emerald-500"></i>Brand New (Unused)</span>
-                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]" id="count-New">0</span>
+                    <button onclick="setStatusFilter('New')" id="btn-filter-New" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all font-mono">
+                        <span><i class="fa-solid fa-circle mr-2 text-emerald-500"></i>Brand New Stock</span>
+                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]" id="count-New">0</span>
                     </button>
-                    <button onclick="setStatusFilter('Retreaded')" id="btn-filter-Retreaded" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all">
+                    <button onclick="setStatusFilter('Retreaded')" id="btn-filter-Retreaded" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all font-mono">
                         <span><i class="fa-solid fa-arrows-spin mr-2 text-sky-400"></i>Retreaded Casings</span>
-                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]" id="count-Retreaded">0</span>
+                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]" id="count-Retreaded">0</span>
                     </button>
-                    <button onclick="setStatusFilter('Used')" id="btn-filter-Used" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all">
+                    <button onclick="setStatusFilter('Used')" id="btn-filter-Used" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all font-mono">
                         <span><i class="fa-solid fa-circle-chevron-down mr-2 text-amber-500"></i>Used (Serviceable)</span>
-                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]" id="count-Used">0</span>
+                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]" id="count-Used">0</span>
                     </button>
-                    <button onclick="setStatusFilter('Scrap')" id="btn-filter-Scrap" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all">
-                        <span><i class="fa-solid fa-trash-can mr-2 text-red-500"></i>Scrapped Casing</span>
-                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]" id="count-Scrap">0</span>
+                    <button onclick="setStatusFilter('Scrap')" id="btn-filter-Scrap" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all font-mono">
+                        <span><i class="fa-solid fa-trash-can mr-2 text-red-500"></i>Logged Scrap</span>
+                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]" id="count-Scrap">0</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Brand Stock Chart -->
-            <div class="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl space-y-3">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Brand Distribution</span>
+            <!-- Casing Distribution Chart -->
+            <div class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Brand Allocation</span>
                 <div class="h-32 w-full flex items-center justify-center relative">
-                    <canvas id="brandChart"></canvas>
+                    <canvas id="brandDistributionChart"></canvas>
                 </div>
             </div>
 
-            <!-- Warehouse Storage Location Overview -->
-            <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-xl space-y-3">
+            <!-- Warehouse Storage Capacities -->
+            <div class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-3">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Storage Warehouses</span>
-                    <i class="fa-solid fa-map-location-dot text-slate-500 text-xs"></i>
+                    <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono">Warehouse Loads</span>
+                    <i class="fa-solid fa-map-location-dot text-slate-600 text-xs"></i>
                 </div>
-                <div class="text-[11px] text-slate-400 space-y-2">
-                    <div class="flex justify-between">
-                        <span>Sector WH-A (Main Heavy):</span>
-                        <span class="text-white font-semibold" id="wh-heavy-count">0</span>
+                <div class="text-xs text-slate-400 space-y-2.5 font-mono">
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span>Zone WH-A (Heavy Loader Stock)</span>
+                            <span class="text-white font-semibold" id="wh-heavy-count">0</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="wh-heavy-bar" class="bg-amber-500 h-full transition-all" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Sector WH-B (Logistics):</span>
-                        <span class="text-white font-semibold" id="wh-logistics-count">0</span>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span>Zone WH-B (Logistics Tires)</span>
+                            <span class="text-white font-semibold" id="wh-logistics-count">0</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="wh-logistics-bar" class="bg-sky-500 h-full transition-all" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Sector WH-C (Support/SV):</span>
-                        <span class="text-white font-semibold" id="wh-support-count">0</span>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span>Zone WH-C (Support SUV Stock)</span>
+                            <span class="text-white font-semibold" id="wh-support-count">0</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="wh-support-bar" class="bg-emerald-500 h-full transition-all" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <!-- Center Workspace Panel -->
-        <main class="flex-1 bg-slate-900 flex flex-col overflow-hidden">
+        <!-- Center Registry Workspace Panel -->
+        <main class="flex-1 bg-[#07090f] flex flex-col overflow-hidden">
             
-            <!-- Search & Interactive Filters Bar -->
-            <section class="bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
+            <!-- Quick Search & Complex Category Filters -->
+            <section class="bg-[#0b0f19] border-b border-slate-800/80 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 shrink-0 shadow-md">
                 <div class="relative max-w-md w-full">
-                    <input type="text" id="inventorySearch" placeholder="Search by Serial Tag, Brand, or Model..." 
-                           class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 pl-9 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors">
+                    <input type="text" id="inventorySearch" placeholder="Search by Casing Serial Tag, Brand, or Model..." 
+                           class="w-full bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-2.5 pl-10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
                 </div>
 
-                <div class="flex items-center space-x-2 text-xs">
-                    <span class="text-slate-400">Size:</span>
-                    <select id="sizeSelector" onchange="runFilters()" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-amber-500">
-                        <option value="all">All Sizes</option>
-                        <option value="295/80R22.5">295/80R22.5 (Logistics)</option>
-                        <option value="12.00R20">12.00R20 (Transit Mixer)</option>
-                        <option value="45/65R45">45/65R45 (Heavy Loader)</option>
-                        <option value="265/70R17">265/70R17 (Support SUV)</option>
-                    </select>
+                <div class="flex flex-wrap items-center gap-3 text-xs">
+                    <div class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-500 font-mono">Tire Size:</span>
+                        <select id="sizeSelector" onchange="runFilters()" class="bg-transparent text-slate-300 focus:outline-none cursor-pointer">
+                            <option value="all">All Sizes</option>
+                            <option value="295/80R22.5">295/80R22.5 (Logistics)</option>
+                            <option value="12.00R20">12.00R20 (Transit Mixer)</option>
+                            <option value="45/65R45">45/65R45 (Heavy Loader)</option>
+                            <option value="265/70R17">265/70R17 (Support SUV)</option>
+                        </select>
+                    </div>
 
-                    <span class="text-slate-400 pl-2">Warehouse:</span>
-                    <select id="warehouseSelector" onchange="runFilters()" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-amber-500">
-                        <option value="all">All Locations</option>
-                        <option value="Warehouse A">Warehouse A (Heavy)</option>
-                        <option value="Warehouse B">Warehouse B (Logistics)</option>
-                        <option value="Warehouse C">Warehouse C (Support)</option>
-                    </select>
+                    <div class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-500 font-mono">Warehouse Zone:</span>
+                        <select id="warehouseSelector" onchange="runFilters()" class="bg-transparent text-slate-300 focus:outline-none cursor-pointer">
+                            <option value="all">All Zones</option>
+                            <option value="Warehouse A">Zone A (Heavy)</option>
+                            <option value="Warehouse B">Zone B (Logistics)</option>
+                            <option value="Warehouse C">Zone C (Support)</option>
+                        </select>
+                    </div>
                 </div>
             </section>
 
-            <!-- Inventory Table Container -->
+            <!-- Dynamic Table Listing Container -->
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+                <div class="bg-[#0b0f19]/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
                         <div>
-                            <h2 class="font-bold text-white tracking-tight flex items-center text-sm">
-                                <i class="fa-solid fa-list-check text-amber-500 mr-2"></i> Rubber & Spares Casing Inventory
+                            <h2 class="font-extrabold text-white tracking-tight flex items-center text-sm font-mono">
+                                <i class="fa-solid fa-list-check text-amber-500 mr-2.5"></i> CASING REGISTRY & SPARES STOCK
                             </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Physical casing stock and tire configuration details</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Select an item below to coordinate inspections, lifecycle changes, or axle mounting dispatches.</p>
                         </div>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="border-b border-slate-800 text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-slate-900/60 select-none">
-                                    <th class="py-3 px-4">Serial Tag</th>
-                                    <th class="py-3 px-4">Brand / Model</th>
-                                    <th class="py-3 px-4">Size Specs</th>
-                                    <th class="py-3 px-4">Tread Depth (mm)</th>
-                                    <th class="py-3 px-4">Warehouse Casing Status</th>
-                                    <th class="py-3 px-4">Storage Zone</th>
-                                    <th class="py-3 px-4">Unit Cost</th>
-                                    <th class="py-3 px-4 text-right">Operations</th>
+                                <tr class="border-b border-slate-800 text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#090d16] select-none">
+                                    <th class="py-3 px-5">Casing Serial</th>
+                                    <th class="py-3 px-5">Brand / Model</th>
+                                    <th class="py-3 px-5">Size Spec</th>
+                                    <th class="py-3 px-5">Remaining Tread</th>
+                                    <th class="py-3 px-5">Warehouse Status</th>
+                                    <th class="py-3 px-5">Storage Zone</th>
+                                    <th class="py-3 px-5">Est. Value</th>
+                                    <th class="py-3 px-5 text-right">Interactive Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="inventoryTableBody" class="divide-y divide-slate-800/50">
-                                <!-- Dynamic tire rows loaded here -->
+                            <tbody id="inventoryTableBody" class="divide-y divide-slate-850">
+                                <!-- Dynamic tire rows loaded via javascript -->
                             </tbody>
                         </table>
                     </div>
@@ -230,109 +262,157 @@
             </div>
         </main>
 
-        <!-- Right Sidebar: Interactive Detail & Checkout Dispatch Desk -->
-        <aside class="w-[420px] bg-slate-950 border-l border-slate-800 flex flex-col shrink-0 overflow-y-auto">
-            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 shrink-0">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                    <i class="fa-solid fa-truck-ramp-box text-amber-500 mr-2"></i> Operations Desk
+        <!-- Right Sidebar Operations Desk -->
+        <aside class="w-[430px] bg-[#090c15] border-l border-slate-800/80 flex flex-col shrink-0 overflow-y-auto">
+            <div class="px-5 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-[#090c15]">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center font-mono">
+                    <i class="fa-solid fa-truck-ramp-box text-amber-500 mr-2.5"></i> Operations Control Desk
                 </span>
-                <span id="deskSerialBadge" class="text-xs bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-white font-mono">No Selection</span>
+                <span id="deskSerialBadge" class="text-xs bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-white font-mono font-bold">No Selection</span>
             </div>
 
-            <!-- No Tire Selection Placeholder -->
-            <div id="deskNoSelection" class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                <div class="bg-slate-900 h-16 w-16 rounded-full flex items-center justify-center text-slate-600 border border-slate-800">
-                    <i class="fa-solid fa-crosshairs text-xl animate-pulse"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-slate-300 text-sm">No Tire Selected</h4>
-                    <p class="text-xs text-slate-500 mt-1 max-w-[280px] mx-auto">Select a tire row from the casing registry list to coordinate dispatch allocations, inspect, or manage casing lifecycle operations.</p>
+            <!-- Operations View Toggle Controls -->
+            <div class="px-5 pt-4 shrink-0">
+                <div class="bg-slate-950 p-1 rounded-xl border border-slate-850 flex text-center">
+                    <button id="toggle-dispatch-tab" onclick="setDeskTab('dispatch')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all">
+                        <i class="fa-solid fa-truck-monster mr-1.5"></i>Mounted Fleet
+                    </button>
+                    <button id="toggle-lifecycle-tab" onclick="setDeskTab('lifecycle')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i class="fa-solid fa-arrows-spin mr-1.5"></i>Casing Life Cycle
+                    </button>
                 </div>
             </div>
 
-            <!-- Active Tire Workcard Desk -->
-            <div id="deskActiveWorkcard" class="hidden p-5 flex-1 flex flex-col space-y-6">
-                <!-- Mounted Info Card -->
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Detailed Specifications</span>
-                            <h4 id="deskBrandModel" class="text-sm font-bold text-white">Michelin Defender</h4>
+            <!-- Lifecycle Tab Content -->
+            <div id="lifecycleTabContent" class="hidden p-5 flex-1 flex flex-col space-y-5">
+                <!-- No Selection Fallback -->
+                <div id="deskNoSelection" class="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-4">
+                    <div class="bg-slate-900 h-14 w-14 rounded-full flex items-center justify-center text-slate-600 border border-slate-800 shadow-inner">
+                        <i class="fa-solid fa-crosshairs text-lg animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-300 text-xs">No Tire Selected</h4>
+                        <p class="text-[11px] text-slate-500 mt-1 max-w-[280px] mx-auto">Select any casing row from the warehouse spares list to inspect detailed specs, run retread processes, or scrap.</p>
+                    </div>
+                </div>
+
+                <!-- Active Selection Card -->
+                <div id="deskActiveWorkcard" class="hidden space-y-5">
+                    <div class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Casing Specifications</span>
+                                <h4 id="deskBrandModel" class="text-sm font-extrabold text-white mt-0.5">--</h4>
+                            </div>
+                            <span id="deskStatusBadge" class="text-[9px] px-2.5 py-0.5 rounded font-extrabold uppercase tracking-wider text-emerald-400 border bg-emerald-500/10 border-emerald-500/20">NEW</span>
                         </div>
-                        <span id="deskStatusBadge" class="text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider text-emerald-400 border bg-emerald-500/10 border-emerald-500/20">NEW</span>
+
+                        <div class="grid grid-cols-2 gap-2.5 text-xs">
+                            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 font-mono">
+                                <span class="text-slate-500 block text-[10px]">Serial Tag</span>
+                                <span id="deskSerial" class="font-bold text-slate-200">--</span>
+                            </div>
+                            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 font-mono">
+                                <span class="text-slate-500 block text-[10px]">Tire Size</span>
+                                <span id="deskSize" class="font-bold text-slate-200">--</span>
+                            </div>
+                            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 font-mono">
+                                <span class="text-slate-500 block text-[10px]">Remaining Depth</span>
+                                <span id="deskInitDepth" class="font-bold text-slate-200">--</span>
+                            </div>
+                            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60 font-mono">
+                                <span class="text-slate-500 block text-[10px]">Storage Stack</span>
+                                <span id="deskLocation" class="font-bold text-slate-200">--</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="bg-slate-950/60 p-2.5 rounded border border-slate-800">
-                            <span class="text-slate-500 block">Serial Tag</span>
-                            <span id="deskSerial" class="font-semibold text-slate-200 code-font">--</span>
+                    <!-- Lifecycle Actions -->
+                    <div class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Maintenance Pipelines</span>
+                            <i class="fa-solid fa-gears text-slate-600 text-xs"></i>
                         </div>
-                        <div class="bg-slate-950/60 p-2.5 rounded border border-slate-800">
-                            <span class="text-slate-500 block">Tire Size</span>
-                            <span id="deskSize" class="font-semibold text-slate-200 code-font">--</span>
+                        <div class="space-y-3">
+                            <div class="text-xs text-slate-400 leading-relaxed">
+                                Used tires with sound structural casings can be retreaded to restore tread to original depths. Scrapped tires are retired permanently with no scrap asset value.
+                            </div>
+                            <div class="grid grid-cols-2 gap-3.5">
+                                <button onclick="sendToRetread()" class="bg-sky-600/10 text-sky-400 hover:bg-sky-600 hover:text-slate-950 border border-sky-500/20 px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all">
+                                    <i class="fa-solid fa-arrows-spin"></i>
+                                    <span>Run Retreading</span>
+                                </button>
+                                <button onclick="scrapTireCasing()" class="bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/20 px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    <span>Log as Scrap</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="bg-slate-950/60 p-2.5 rounded border border-slate-800">
-                            <span class="text-slate-500 block">Tread Depth</span>
-                            <span id="deskInitDepth" class="font-semibold text-slate-200 code-font">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dispatch Tab Content -->
+            <div id="dispatchTabContent" class="p-5 flex-1 flex flex-col space-y-5">
+                <!-- Selector Header -->
+                <div class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-4 shadow-xl shrink-0">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">Target Fleet Assembly</label>
+                        <select id="vehicleViewerSelect" onchange="updateVehicleLayout()" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer font-bold font-mono">
+                            <option value="DT-101">Dump Truck #101 (6-Wheeler Assembly)</option>
+                            <option value="MX-201">Transit Mixer #201 (10-Wheeler Assembly)</option>
+                            <option value="PM-501">Prime Mover #501 (10-Wheeler Assembly)</option>
+                            <option value="SV-801">Support SUV #801 (4-Wheeler Assembly)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Interactive Chassis Visual Layout -->
+                <div class="flex-1 bg-[#0b0f19] border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between shadow-xl relative min-h-[340px]">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono" id="axleLayoutTitle">6-WHEELER ASSEMBLY</span>
+                        <span class="text-[10px] text-slate-500 font-bold font-mono">Interactive Axles</span>
+                    </div>
+
+                    <!-- Axle Grid visualizer (dynamically loaded via JS) -->
+                    <div id="axleGridContainer" class="flex-1 flex justify-center items-center py-4 relative">
+                        <!-- Axle components drawn dynamically -->
+                    </div>
+
+                    <div class="border-t border-slate-800/60 pt-3 text-[10px] text-slate-500 font-medium space-y-1.5 leading-relaxed font-mono">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40 inline-block"></span>
+                            <span>Selected Empty Position (Tire Installation)</span>
                         </div>
-                        <div class="bg-slate-950/60 p-2.5 rounded border border-slate-800">
-                            <span class="text-slate-500 block">Location Stack</span>
-                            <span id="deskLocation" class="font-semibold text-slate-200 code-font">--</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded bg-sky-500 inline-block"></span>
+                            <span>Mounted Tire (Click to inspect or de-mount)</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Live Dispatch Form Panel -->
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4">
+                <!-- Mount Submission Dispatcher Block -->
+                <div id="mountingSubmissionBlock" class="bg-[#0b0f19] border border-slate-800/80 p-4 rounded-xl space-y-4 shadow-xl">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Casing Dispatch Allocation</span>
-                        <i class="fa-solid fa-truck text-slate-600 text-xs"></i>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Chassis Mount Operation</span>
+                        <i class="fa-solid fa-wrench text-slate-600 text-xs"></i>
                     </div>
 
-                    <!-- Dispatch to Active Fleet Unit -->
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1.5 font-medium">Assign & Install on Vehicle ID</label>
-                            <select id="dispatchVehicleSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
-                                <option value="DT-101">Dump Truck #101 (Heavy)</option>
-                                <option value="DT-104">Dump Truck #104 (Heavy)</option>
-                                <option value="MX-201">Transit Mixer #201 (Heavy)</option>
-                                <option value="PM-501">Prime Mover #501 (Logistics)</option>
-                                <option value="SV-801">Support SUV #801 (Support)</option>
-                            </select>
+                    <div class="space-y-3.5 text-xs">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-850 space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Selected Tire Casing:</span>
+                                <span id="mountTireLabel" class="text-amber-500 font-bold font-mono">Select a spare casing</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400 font-mono">Selected Chassis Slot:</span>
+                                <span id="mountSlotLabel" class="text-slate-300 font-bold font-mono">Click a wheel slot</span>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1.5 font-medium">Axle Wheel Position</label>
-                            <select id="dispatchWheelSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
-                                <option value="FL">FL (Front-Left Steer)</option>
-                                <option value="FR">FR (Front-Right Steer)</option>
-                                <option value="L1">L1 (Axle 1 Inner Left)</option>
-                                <option value="L2">L2 (Axle 2 Outer Left)</option>
-                                <option value="R1">R1 (Axle 1 Inner Right)</option>
-                                <option value="R2">R2 (Axle 2 Outer Right)</option>
-                            </select>
-                        </div>
-                        <button onclick="dispatchTireToFleet()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2 px-4 rounded-lg text-xs transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10">
-                            <i class="fa-solid fa-truck-arrow-right text-slate-950"></i>
-                            <span class="text-slate-950 font-bold">Confirm Dispatch & Install</span>
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Retread Maintenance Pipeline Action -->
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Maintenance Control</span>
-                        <i class="fa-solid fa-screwdriver-wrench text-slate-600 text-xs"></i>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="sendToRetread()" class="bg-sky-600/10 text-sky-400 hover:bg-sky-600 hover:text-slate-950 border border-sky-500/20 px-3 py-2 rounded-lg text-[11px] font-semibold flex items-center justify-center space-x-1.5 transition-all">
-                            <i class="fa-solid fa-arrows-spin"></i>
-                            <span>Send to Retread</span>
-                        </button>
-                        <button onclick="scrapTireCasing()" class="bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/20 px-3 py-2 rounded-lg text-[11px] font-semibold flex items-center justify-center space-x-1.5 transition-all">
-                            <i class="fa-solid fa-trash-can"></i>
-                            <span>Mark as Scrap</span>
+                        <button id="confirmMountBtn" onclick="mountSelectedTire()" disabled class="w-full bg-slate-800 text-slate-500 font-bold py-3 px-4 rounded-xl text-xs transition-all flex items-center justify-center space-x-2 select-none cursor-not-allowed">
+                            <i class="fa-solid fa-link"></i>
+                            <span>Mount & Deploy Casing</span>
                         </button>
                     </div>
                 </div>
@@ -340,29 +420,29 @@
         </aside>
     </div>
 
-    <!-- New Tire Check-In Casing Modal -->
-    <div id="checkInModal" class="fixed inset-0 bg-slate-950/80 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl relative">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-white text-base flex items-center">
-                    <i class="fa-solid fa-boxes-packing mr-2.5 text-amber-500"></i> New Spares Receipt Check-In
+    <!-- New Spares Casing Shipment Check-In Modal -->
+    <div id="checkInModal" class="fixed inset-0 bg-slate-950/80 backdrop-filter backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                <h3 class="font-bold text-white text-base flex items-center font-mono">
+                    <i class="fa-solid fa-circle-plus mr-2.5 text-amber-500"></i> New Spares Receipt Check-In
                 </h3>
-                <button onclick="closeCheckInModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeCheckInModal()" class="text-slate-400 hover:text-white transition-all text-sm p-1 hover:bg-slate-800 rounded-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <p class="text-xs text-slate-400">
-                Register incoming rubber inventory shipments. Registered items are immediately tracked as unassigned spare casing reserves.
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Register incoming shipments to inventory. Registered items are immediately tracked as active warehouse spare casing reserves.
             </p>
 
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Quantity to Add</label>
-                        <input id="formQty" type="number" min="1" max="50" value="1" oninput="updateSerialInputs()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Receipt Quantity</label>
+                        <input id="formQty" type="number" min="1" max="25" value="1" oninput="updateSerialInputs()" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-bold font-mono">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Unit Brand</label>
-                        <select id="formBrand" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Casing Brand</label>
+                        <select id="formBrand" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-bold cursor-pointer font-mono">
                             <option value="Michelin">Michelin</option>
                             <option value="Bridgestone">Bridgestone</option>
                             <option value="Goodyear">Goodyear</option>
@@ -371,22 +451,22 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Serial Tags Container -->
-                <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-2">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Serial Number Tags</label>
-                    <div id="serialInputsContainer" class="max-h-28 overflow-y-auto space-y-1.5 pr-1">
-                        <!-- Dynamic inputs rendered here -->
+                <!-- Dynamic Serial Inputs -->
+                <div class="bg-slate-950 border border-slate-850 p-4 rounded-xl space-y-2.5">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Shipment Serial IDs</label>
+                    <div id="serialInputsContainer" class="max-h-28 overflow-y-auto space-y-2 pr-1">
+                        <!-- Generated via JS -->
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Model Name</label>
-                        <input id="formModel" type="text" placeholder="e.g., X Multiway" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Casing Model Name</label>
+                        <input id="formModel" type="text" placeholder="e.g., X Multiway" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-bold font-mono">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Size Specs</label>
-                        <select id="formSize" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Specification Size</label>
+                        <select id="formSize" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-bold cursor-pointer font-mono">
                             <option value="295/80R22.5">295/80R22.5</option>
                             <option value="12.00R20">12.00R20</option>
                             <option value="45/65R45">45/65R45</option>
@@ -395,58 +475,58 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Tread Depth (mm)</label>
-                        <input id="formTread" type="number" step="0.1" value="25.0" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Tread Depth (mm)</label>
+                        <input id="formTread" type="number" step="0.1" value="25.0" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-bold font-mono">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Initial Cost ($)</label>
-                        <input id="formCost" type="number" value="450" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Purchase Unit Cost ($)</label>
+                        <input id="formCost" type="number" value="450" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-bold font-mono">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Casing Status</label>
-                        <select id="formStatus" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Initial Status</label>
+                        <select id="formStatus" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-bold cursor-pointer font-mono">
                             <option value="New">New (Unused)</option>
                             <option value="Retreaded">Retreaded Casing</option>
                             <option value="Used">Used (Serviceable)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1 uppercase">Storage Location</label>
-                        <select id="formLocation" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
-                            <option value="Warehouse A">Warehouse A</option>
-                            <option value="Warehouse B">Warehouse B</option>
-                            <option value="Warehouse C">Warehouse C</option>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase font-mono">Warehouse Storage Zone</label>
+                        <select id="formLocation" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-bold cursor-pointer font-mono">
+                            <option value="Warehouse A">Zone A (Heavy)</option>
+                            <option value="Warehouse B">Zone B (Logistics)</option>
+                            <option value="Warehouse C">Zone C (Support)</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-2">
-                <button onclick="closeCheckInModal()" class="bg-slate-950 border border-slate-800 text-slate-400 hover:text-white px-4 py-2 rounded-lg text-xs font-semibold">Cancel</button>
-                <button onclick="submitNewTireCheckIn()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-lg text-xs font-bold shadow-lg shadow-amber-500/10">Add Casing Stock</button>
+            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                <button onclick="closeCheckInModal()" class="bg-slate-950 border border-slate-850 text-slate-400 hover:text-white px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all">Cancel</button>
+                <button onclick="submitNewTireCheckIn()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl text-xs font-extrabold font-mono transition-all shadow-lg shadow-amber-500/10">Register Shipment</button>
             </div>
         </div>
     </div>
 
-    <!-- Log & Operations Ledger Footbar -->
-    <footer class="bg-slate-950 border-t border-slate-800 px-6 py-3 flex items-center justify-between text-xs text-slate-400 shrink-0 z-10">
+    <!-- Live Audit Trail Log Footbar -->
+    <footer class="bg-[#05080e] border-t border-slate-800 px-6 py-3 flex items-center justify-between text-xs text-slate-400 shrink-0 z-10">
         <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
-            <span class="font-bold text-slate-300 uppercase tracking-widest text-[9px]">Live Audit Trail:</span>
-            <span id="auditTrailText" class="text-slate-400 truncate max-w-lg">Casing inventory system initialized. Waiting for action logs...</span>
+            <i class="fa-solid fa-terminal text-slate-600"></i>
+            <span class="font-bold text-slate-300 uppercase tracking-widest text-[9px] font-mono">Telemetry Journal:</span>
+            <span id="auditTrailText" class="text-slate-400 truncate max-w-lg font-mono text-[11px]">Core systems loaded. Awaiting operator input...</span>
         </div>
         <div class="hidden sm:flex items-center space-x-4">
-            <span>Enterprise System ID: <strong class="text-slate-300 font-mono">TTP-INV-2026</strong></span>
+            <span class="text-slate-500 font-mono text-[11px]">System: <strong class="text-slate-300 font-mono">TTP-INV-CORE</strong></span>
         </div>
     </footer>
 
     <script>
-        // Core mock data repository for physical unassigned spare casings
+        // Physical Warehouse Casing Spares
         let TIRE_INVENTORY = [
             { serial: "MI-90112", brand: "Michelin", model: "OTR Steel Belt", size: "45/65R45", treadDepth: 25.0, status: "New", location: "Warehouse A", cost: 1850 },
             { serial: "BR-45012", brand: "Bridgestone", model: "V-Steel Multi", size: "12.00R20", treadDepth: 16.5, status: "New", location: "Warehouse A", cost: 580 },
@@ -457,44 +537,142 @@
             { serial: "MI-60112", brand: "Michelin", model: "Defender LTX", size: "265/70R17", treadDepth: 9.5, status: "New", location: "Warehouse C", cost: 180 },
             { serial: "BR-90412", brand: "Bridgestone", model: "Dueler Support", size: "265/70R17", treadDepth: 5.2, status: "Used", location: "Warehouse C", cost: 90 },
             { serial: "GY-33119", brand: "Goodyear", model: "Duraseal Offroad", size: "45/65R45", treadDepth: 28.0, status: "New", location: "Warehouse A", cost: 2100 },
-            { serial: "MI-11002", brand: "Michelin", model: "X Multi Steer", size: "295/80R22.5", treadDepth: 12.8, status: "Retreaded", location: "Warehouse B", cost: 285 },
-            { serial: "BR-50221", brand: "Bridgestone", model: "L320 Offroad", size: "12.00R20", treadDepth: 4.5, status: "Used", location: "Warehouse A", cost: 180 },
-            { serial: "GY-99120", brand: "Goodyear", model: "Unisteel Casing", size: "12.00R20", treadDepth: 2.2, status: "Scrap", location: "Warehouse A", cost: 0 }
+            { serial: "MI-11002", brand: "Michelin", model: "X Multi Steer", size: "295/80R22.5", treadDepth: 12.8, status: "Retreaded", location: "Warehouse B", cost: 285 }
         ];
 
+        // Currently Dispatched Tires (Active on vehicle axles)
+        let ACTIVE_DISPATCHES = [
+            { serial: "MI-DISP01", brand: "Michelin", model: "OTR Steel Belt", size: "45/65R45", treadDepth: 20.2, status: "Used", location: "Active", cost: 1850, vehicle: "DT-101", spot: "FL" },
+            { serial: "BR-DISP02", brand: "Bridgestone", model: "V-Steel Multi", size: "12.00R20", treadDepth: 14.1, status: "Used", location: "Active", cost: 580, vehicle: "DT-101", spot: "FR" },
+            { serial: "GY-DISP03", brand: "Goodyear", model: "ArmorMax Pro", size: "295/80R22.5", treadDepth: 11.5, status: "Used", location: "Active", cost: 420, vehicle: "PM-501", spot: "L1O" }
+        ];
+
+        // Vehicle Layout Schema configurations for interactive chassis mapper
+        const VEHICLE_CONFIGS = {
+            "DT-101": { 
+                name: "DUMP TRUCK #101", 
+                type: "Heavy (6 Wheels)", 
+                spots: [
+                    { id: "FL", label: "Front Left Steer", row: 1, side: "left" },
+                    { id: "FR", label: "Front Right Steer", row: 1, side: "right" },
+                    { id: "RLI", label: "Axle 2 Inner Left", row: 2, side: "left" },
+                    { id: "RLO", label: "Axle 2 Outer Left", row: 2, side: "left" },
+                    { id: "RRI", label: "Axle 2 Inner Right", row: 2, side: "right" },
+                    { id: "RRO", label: "Axle 2 Outer Right", row: 2, side: "right" }
+                ]
+            },
+            "MX-201": { 
+                name: "TRANSIT MIXER #201", 
+                type: "Heavy Mixer (10 Wheels)", 
+                spots: [
+                    { id: "FL", label: "Front Left Steer", row: 1, side: "left" },
+                    { id: "FR", label: "Front Right Steer", row: 1, side: "right" },
+                    { id: "L1I", label: "Axle 2 Inner Left", row: 2, side: "left" },
+                    { id: "L1O", label: "Axle 2 Outer Left", row: 2, side: "left" },
+                    { id: "R1I", label: "Axle 2 Inner Right", row: 2, side: "right" },
+                    { id: "R1O", label: "Axle 2 Outer Right", row: 2, side: "right" },
+                    { id: "L2I", label: "Axle 3 Inner Left", row: 3, side: "left" },
+                    { id: "L2O", label: "Axle 3 Outer Left", row: 3, side: "left" },
+                    { id: "R2I", label: "Axle 3 Inner Right", row: 3, side: "right" },
+                    { id: "R2O", label: "Axle 3 Outer Right", row: 3, side: "right" }
+                ]
+            },
+            "PM-501": { 
+                name: "PRIME MOVER #501", 
+                type: "Logistics (10 Wheels)", 
+                spots: [
+                    { id: "FL", label: "Front Left Steer", row: 1, side: "left" },
+                    { id: "FR", label: "Front Right Steer", row: 1, side: "right" },
+                    { id: "L1I", label: "Axle 2 Inner Left", row: 2, side: "left" },
+                    { id: "L1O", label: "Axle 2 Outer Left", row: 2, side: "left" },
+                    { id: "R1I", label: "Axle 2 Inner Right", row: 2, side: "right" },
+                    { id: "R1O", label: "Axle 2 Outer Right", row: 2, side: "right" },
+                    { id: "L2I", label: "Axle 3 Inner Left", row: 3, side: "left" },
+                    { id: "L2O", label: "Axle 3 Outer Left", row: 3, side: "left" },
+                    { id: "R2I", label: "Axle 3 Inner Right", row: 3, side: "right" },
+                    { id: "R2O", label: "Axle 3 Outer Right", row: 3, side: "right" }
+                ]
+            },
+            "SV-801": { 
+                name: "SUPPORT SUV #801", 
+                type: "Support (4 Wheels)", 
+                spots: [
+                    { id: "FL", label: "Front Left", row: 1, side: "left" },
+                    { id: "FR", label: "Front Right", row: 1, side: "right" },
+                    { id: "RL", label: "Rear Left", row: 2, side: "left" },
+                    { id: "RR", label: "Rear Right", row: 2, side: "right" }
+                ]
+            }
+        };
+
         let selectedTire = null;
+        let selectedMountSlot = null; // Spot ID on active vehicle chassis
         let activeStatusFilter = "all";
+        let activeDeskTab = "dispatch"; // 'dispatch' or 'lifecycle'
         let brandChartInstance = null;
 
-        // Initialize App Systems on window load
+        // Initialize Application Modules
         window.addEventListener('load', () => {
             renderInventoryTable();
             refreshDashboardMetrics();
-            initBrandChart();
+            initBrandDistributionChart();
+            updateVehicleLayout();
         });
 
-        // Dynamic dashboard value recalculations
+        // Tab Switching in Control Desk
+        function setDeskTab(tab) {
+            activeDeskTab = tab;
+            const btnDispatch = document.getElementById('toggle-dispatch-tab');
+            const btnLifecycle = document.getElementById('toggle-lifecycle-tab');
+            const contentDispatch = document.getElementById('dispatchTabContent');
+            const contentLifecycle = document.getElementById('lifecycleTabContent');
+
+            if (tab === 'dispatch') {
+                btnDispatch.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all";
+                btnLifecycle.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+                contentDispatch.classList.remove('hidden');
+                contentLifecycle.classList.add('hidden');
+            } else {
+                btnDispatch.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+                btnLifecycle.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all";
+                contentDispatch.classList.add('hidden');
+                contentLifecycle.classList.remove('hidden');
+            }
+        }
+
+        // Dashboard Metric Refresh and Load Progress Calculations
         function refreshDashboardMetrics() {
             const totalStock = TIRE_INVENTORY.length;
-            const totalVal = TIRE_INVENTORY.reduce((sum, item) => sum + item.cost, 0);
+            const activeFleet = ACTIVE_DISPATCHES.length;
+            const totalVal = TIRE_INVENTORY.reduce((sum, item) => sum + item.cost, 0) + ACTIVE_DISPATCHES.reduce((sum, item) => sum + item.cost, 0);
 
-            document.getElementById('stat-total-stock').innerText = `${totalStock} Casings`;
-            document.getElementById('stat-total-value').innerText = `$${totalVal.toLocaleString()}`;
+            document.getElementById('stat-total-stock').innerText = totalStock;
+            document.getElementById('stat-active-fleet').innerText = activeFleet;
+            document.getElementById('stat-total-value').innerText = `$${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-            // Status Badge Counts
+            // Spares filter counts
             document.getElementById('count-all').innerText = totalStock;
             document.getElementById('count-New').innerText = TIRE_INVENTORY.filter(t => t.status === "New").length;
             document.getElementById('count-Retreaded').innerText = TIRE_INVENTORY.filter(t => t.status === "Retreaded").length;
             document.getElementById('count-Used').innerText = TIRE_INVENTORY.filter(t => t.status === "Used").length;
             document.getElementById('count-Scrap').innerText = TIRE_INVENTORY.filter(t => t.status === "Scrap").length;
 
-            // Warehouse Location counts
-            document.getElementById('wh-heavy-count').innerText = TIRE_INVENTORY.filter(t => t.location === "Warehouse A").length;
-            document.getElementById('wh-logistics-count').innerText = TIRE_INVENTORY.filter(t => t.location === "Warehouse B").length;
-            document.getElementById('wh-support-count').innerText = TIRE_INVENTORY.filter(t => t.location === "Warehouse C").length;
+            // Warehouse Capacities loads
+            const whA = TIRE_INVENTORY.filter(t => t.location === "Warehouse A").length;
+            const whB = TIRE_INVENTORY.filter(t => t.location === "Warehouse B").length;
+            const whC = TIRE_INVENTORY.filter(t => t.location === "Warehouse C").length;
+
+            document.getElementById('wh-heavy-count').innerText = `${whA} / 25`;
+            document.getElementById('wh-logistics-count').innerText = `${whB} / 25`;
+            document.getElementById('wh-support-count').innerText = `${whC} / 25`;
+
+            // Adjust storage loads bar widths
+            document.getElementById('wh-heavy-bar').style.width = `${Math.min(100, (whA / 25) * 100)}%`;
+            document.getElementById('wh-logistics-bar').style.width = `${Math.min(100, (whB / 25) * 100)}%`;
+            document.getElementById('wh-support-bar').style.width = `${Math.min(100, (whC / 25) * 100)}%`;
         }
 
-        // Primary Casing Filter Logic
+        // Global Filters run trigger
         function runFilters() {
             renderInventoryTable();
         }
@@ -502,27 +680,25 @@
         function setStatusFilter(status) {
             activeStatusFilter = status;
             
-            // Toggle highlight colors
             const buttons = document.querySelectorAll('#statusFiltersGroup button');
             buttons.forEach(btn => {
                 if (btn.id === `btn-filter-${status}`) {
-                    btn.className = "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-amber-500 text-slate-950";
+                    btn.className = "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium bg-amber-500 text-slate-950 transition-all font-mono";
                     const badge = btn.querySelector('span:last-child');
-                    badge.className = "px-1.5 py-0.5 rounded bg-slate-900/10 text-slate-950 font-mono text-[10px]";
+                    badge.className = "px-1.5 py-0.5 rounded bg-slate-900/10 text-slate-950 font-bold text-[10px]";
                 } else {
-                    btn.className = "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all";
+                    btn.className = "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all font-mono";
                     const badge = btn.querySelector('span:last-child');
-                    badge.className = "px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]";
+                    badge.className = "px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]";
                 }
             });
 
             runFilters();
         }
 
-        // Interactive search processing listener
+        // Input listener for real-time quick search
         document.getElementById('inventorySearch').addEventListener('input', runFilters);
 
-        // Core visual table display generator
         function renderInventoryTable() {
             const tableBody = document.getElementById('inventoryTableBody');
             tableBody.innerHTML = '';
@@ -540,27 +716,48 @@
                 return matchesSearch && matchesStatus && matchesSize && matchesWH;
             });
 
+            if (filteredList.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-12 text-slate-500 font-mono">
+                            <i class="fa-solid fa-magnifying-glass-chart text-xl mb-2 block"></i>
+                            No spare casings match the active filter criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
             filteredList.forEach(tire => {
                 const statusBadge = getStatusStyle(tire.status);
                 const depthHighlight = getTreadColor(tire.treadDepth);
-                const isSelected = selectedTire && selectedTire.serial === tire.serial ? 'bg-slate-900/80 border-l-4 border-amber-500' : 'hover:bg-slate-900/40';
+                const isSelected = selectedTire && selectedTire.serial === tire.serial ? 'bg-[#151c2f] border-l-4 border-amber-500' : 'hover:bg-slate-900/40';
 
                 const row = `
-                    <tr class="transition-colors cursor-pointer border-b border-slate-800/40 ${isSelected}" onclick="selectTire('${tire.serial}')">
-                        <td class="py-3 px-4 font-bold text-white tracking-wide code-font">${tire.serial}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-200">${tire.brand} <span class="font-normal text-slate-400 text-[11px]">${tire.model}</span></td>
-                        <td class="py-3 px-4 text-slate-400 code-font">${tire.size}</td>
-                        <td class="py-3 px-4 font-bold code-font ${depthHighlight}">${tire.treadDepth.toFixed(1)} mm</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}">
+                    <tr class="transition-all cursor-pointer border-b border-slate-800/50 ${isSelected}" onclick="selectTire('${tire.serial}')">
+                        <td class="py-3 px-5 font-bold text-white tracking-wide font-mono">${tire.serial}</td>
+                        <td class="py-3 px-5 font-semibold text-slate-200">
+                            ${tire.brand} <span class="font-normal text-slate-400 text-[11px] block md:inline md:ml-1 font-mono">${tire.model}</span>
+                        </td>
+                        <td class="py-3 px-5 text-slate-400 font-mono">${tire.size}</td>
+                        <td class="py-3 px-5 font-bold font-mono">
+                            <div class="flex items-center space-x-2">
+                                <span class="${depthHighlight}">${tire.treadDepth.toFixed(1)} mm</span>
+                                <div class="w-12 bg-slate-800 h-1.5 rounded-full overflow-hidden hidden md:block">
+                                    <div class="${depthHighlight.replace('text-', 'bg-')} h-full" style="width: ${Math.min(100, (tire.treadDepth / 25) * 100)}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${statusBadge.bg} ${statusBadge.text} border ${statusBadge.border}">
                                 <span class="h-1.5 w-1.5 rounded-full ${statusBadge.dot} mr-1.5"></span>${tire.status}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-slate-400 font-medium"><i class="fa-solid fa-location-dot text-slate-600 mr-1.5"></i>${tire.location}</td>
-                        <td class="py-3 px-4 font-bold text-emerald-400 code-font">$${tire.cost.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-right">
-                            <button class="bg-slate-900 hover:border-slate-700 border border-slate-800 text-xs text-amber-500 font-semibold px-2.5 py-1 rounded transition-all">
-                                Inspect
+                        <td class="py-3 px-5 text-slate-400 font-medium font-mono"><i class="fa-solid fa-location-dot text-slate-600 mr-1.5"></i>${tire.location}</td>
+                        <td class="py-3 px-5 font-bold text-emerald-400 font-mono">$${tire.cost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+                        <td class="py-3 px-5 text-right">
+                            <button class="bg-slate-900 hover:border-slate-700 hover:text-white border border-slate-800 text-slate-400 hover:text-amber-400 font-bold px-3 py-1.5 rounded-xl transition-all font-mono text-[11px]">
+                                Focus Unit
                             </button>
                         </td>
                     </tr>
@@ -569,7 +766,7 @@
             });
         }
 
-        // Styling helpers for casing badges and metric ranges
+        // Badge Status Styles
         function getStatusStyle(status) {
             if (status === "New") return { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" };
             if (status === "Retreaded") return { bg: "bg-sky-500/10", text: "text-sky-400", border: "border-sky-500/20", dot: "bg-sky-400" };
@@ -577,21 +774,137 @@
             return { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20", dot: "bg-red-400" };
         }
 
+        // Depth Level Warnings
         function getTreadColor(depth) {
             if (depth > 12) return 'text-emerald-400';
             if (depth > 6) return 'text-amber-400';
             return 'text-red-500';
         }
 
-        // Row focus and Workcard initialization
+        // Axle layout rendering and interactive updates
+        function updateVehicleLayout() {
+            const select = document.getElementById('vehicleViewerSelect');
+            const activeVeh = select.value;
+            const config = VEHICLE_CONFIGS[activeVeh];
+
+            document.getElementById('axleLayoutTitle').innerText = `${config.name} (${config.type})`;
+
+            const container = document.getElementById('axleGridContainer');
+            container.innerHTML = '';
+
+            // Construct structural vehicle visualizer chassis SVG / Grid
+            const chassisHtml = `
+                <div class="relative w-full max-w-[280px] h-[240px] border border-slate-800/40 rounded-xl bg-slate-950/40 p-4 flex flex-col justify-between overflow-hidden">
+                    <!-- Central Chassis Frame Line -->
+                    <div class="absolute left-1/2 top-4 bottom-4 w-4 bg-slate-800/30 transform -translate-x-1/2 rounded-full border border-slate-800"></div>
+                    
+                    <!-- Dynamic axle rows construction -->
+                    <div class="flex flex-col h-full justify-between relative z-10">
+                        <div id="axle-row-1" class="flex justify-between items-center relative py-2">
+                            <div class="absolute inset-x-0 h-1 bg-slate-800/40 -z-10"></div>
+                        </div>
+                        <div id="axle-row-2" class="flex justify-between items-center relative py-2">
+                            <div class="absolute inset-x-0 h-1 bg-slate-800/40 -z-10"></div>
+                        </div>
+                        <div id="axle-row-3" class="flex justify-between items-center relative py-2 hidden">
+                            <div class="absolute inset-x-0 h-1 bg-slate-800/40 -z-10"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', chassisHtml);
+
+            // Determine if Axle 3 is needed
+            const hasAxle3 = config.spots.some(s => s.row === 3);
+            if (hasAxle3) {
+                document.getElementById('axle-row-3').classList.remove('hidden');
+            }
+
+            // Distribute spots to axle rows
+            config.spots.forEach(spot => {
+                const rowEl = document.getElementById(`axle-row-${spot.row}`);
+                
+                // Find if tire is already mounted in this spot
+                const mountedTire = ACTIVE_DISPATCHES.find(t => t.vehicle === activeVeh && t.spot === spot.id);
+                
+                let wheelClass = "bg-slate-900 border-slate-750 text-slate-500 hover:border-amber-500/50 hover:text-amber-400";
+                let activeGlow = "";
+                if (mountedTire) {
+                    wheelClass = "bg-sky-500 border-sky-400 text-slate-950 font-extrabold shadow-lg shadow-sky-500/20 hover:bg-sky-400";
+                } else if (selectedMountSlot === spot.id) {
+                    wheelClass = "bg-amber-500/20 border-amber-500 text-amber-500 font-extrabold shadow-lg shadow-amber-500/20";
+                    activeGlow = "animate-pulse";
+                }
+
+                const wheelHtml = `
+                    <button onclick="selectChassisSpot('${spot.id}', ${mountedTire ? `'${mountedTire.serial}'` : 'null'})" 
+                            title="${spot.label} ${mountedTire ? `(Mounted: ${mountedTire.serial})` : '(Vacant)'}"
+                            class="w-10 h-14 rounded-lg border-2 flex flex-col justify-between items-center p-1 transition-all text-[8px] font-mono leading-none ${wheelClass} ${activeGlow}">
+                        <span>${spot.id}</span>
+                        <i class="fa-solid ${mountedTire ? 'fa-dharmachakra animate-spin' : 'fa-plus'} text-[10px]"></i>
+                    </button>
+                `;
+
+                if (spot.side === "left") {
+                    rowEl.insertAdjacentHTML('afterbegin', wheelHtml);
+                } else {
+                    rowEl.insertAdjacentHTML('beforeend', wheelHtml);
+                }
+            });
+        }
+
+        // Selection of dynamic wheel position
+        function selectChassisSpot(spotId, mountedSerial) {
+            if (mountedSerial) {
+                // Clicking an occupied spot inspects the mounted tire
+                const activeVeh = document.getElementById('vehicleViewerSelect').value;
+                const tire = ACTIVE_DISPATCHES.find(t => t.serial === mountedSerial);
+                if (tire) {
+                    selectedTire = tire;
+                    setDeskTab('lifecycle');
+                    
+                    // Reveal details
+                    document.getElementById('deskNoSelection').classList.add('hidden');
+                    document.getElementById('deskActiveWorkcard').classList.remove('hidden');
+
+                    document.getElementById('deskSerialBadge').innerText = tire.serial;
+                    document.getElementById('deskBrandModel').innerText = `${tire.brand} - ${tire.model}`;
+                    document.getElementById('deskSerial').innerText = tire.serial;
+                    document.getElementById('deskSize').innerText = tire.size;
+                    document.getElementById('deskInitDepth').innerText = `${tire.treadDepth.toFixed(1)} mm (Service)`;
+                    document.getElementById('deskLocation').innerText = `Active (Mounted: ${activeVeh} [${spotId}])`;
+
+                    // Update Badge Status Details
+                    const badge = document.getElementById('deskStatusBadge');
+                    const style = getStatusStyle(tire.status);
+                    badge.innerText = `ACTIVE MOUNT`;
+                    badge.className = `text-[9px] px-2.5 py-0.5 rounded font-extrabold uppercase tracking-wider text-sky-400 border bg-sky-500/10 border-sky-500/20`;
+                    
+                    appendAuditLog(`Inspecting deployed tire ${tire.serial} mounted on Axle Spot ${spotId} of Unit ${activeVeh}.`);
+                }
+                return;
+            }
+
+            // Clicking an empty spot prepares mounting
+            selectedMountSlot = spotId;
+            document.getElementById('mountSlotLabel').innerText = spotId;
+            document.getElementById('mountSlotLabel').className = "text-amber-500 font-bold font-mono";
+            
+            updateVehicleLayout();
+            evalMountingEligibility();
+        }
+
+        // Selection of warehouse spare item
         function selectTire(serial) {
             const tire = TIRE_INVENTORY.find(t => t.serial === serial);
             if (!tire) return;
 
             selectedTire = tire;
-            renderInventoryTable(); // Refresh table highlight
+            renderInventoryTable(); // Refresh selection line highlight
 
-            // Reveal desk elements
+            setDeskTab('lifecycle');
+
+            // Reveal lifecycle details
             document.getElementById('deskNoSelection').classList.add('hidden');
             document.getElementById('deskActiveWorkcard').classList.remove('hidden');
 
@@ -602,120 +915,172 @@
             document.getElementById('deskInitDepth').innerText = `${tire.treadDepth.toFixed(1)} mm`;
             document.getElementById('deskLocation').innerText = tire.location;
 
-            // Display matching status details
+            // Update Badge Status Details
             const badge = document.getElementById('deskStatusBadge');
             const style = getStatusStyle(tire.status);
             badge.innerText = tire.status;
-            badge.className = `text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${style.text} border ${style.bg} ${style.border}`;
+            badge.className = `text-[9px] px-2.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${style.text} border ${style.bg} ${style.border}`;
+
+            // Update Mounting selector labels on second tab
+            document.getElementById('mountTireLabel').innerText = `${tire.serial} (${tire.size})`;
+            document.getElementById('mountTireLabel').className = "text-emerald-400 font-bold font-mono";
+
+            appendAuditLog(`Selected spares casing ${tire.serial} for evaluation.`);
+            evalMountingEligibility();
         }
 
-        // Push operations audits into history log footer
-        function appendAuditLog(text) {
-            document.getElementById('auditTrailText').innerText = text;
-        }
-
-        // Toast Trigger system
-        function triggerToast(message) {
-            const toast = document.getElementById('toastNotification');
-            document.getElementById('toastMessage').innerText = message;
-            toast.className = "fixed top-20 right-6 z-50 transform translate-x-0 opacity-100 transition-all duration-300 pointer-events-auto";
+        // Evaluates if all criteria is met for a deployment mounting operation
+        function evalMountingEligibility() {
+            const btn = document.getElementById('confirmMountBtn');
             
-            setTimeout(() => {
-                toast.className = "fixed top-20 right-6 z-50 transform translate-x-96 opacity-0 transition-all duration-300 pointer-events-none";
-            }, 3500);
+            if (selectedTire && selectedTire.location !== "Active" && selectedMountSlot) {
+                btn.disabled = false;
+                btn.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold py-3 px-4 rounded-xl text-xs transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10 cursor-pointer";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full bg-slate-800 text-slate-500 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 select-none cursor-not-allowed";
+            }
         }
 
-        // Dispatch spares to active fleet
-        function dispatchTireToFleet() {
-            if (!selectedTire) return;
+        // Mount / Deploy selected casing to fleet
+        function mountSelectedTire() {
+            if (!selectedTire || !selectedMountSlot) return;
 
-            const vehicle = document.getElementById('dispatchVehicleSelect').value;
-            const wheelPos = document.getElementById('dispatchWheelSelect').value;
+            const activeVeh = document.getElementById('vehicleViewerSelect').value;
 
-            // Remove tire from spares inventory database
+            // Remove from spares warehouse
             TIRE_INVENTORY = TIRE_INVENTORY.filter(t => t.serial !== selectedTire.serial);
 
-            appendAuditLog(`Dispatch Completed: Casing ${selectedTire.serial} allocated & installed on Vehicle ${vehicle} [Position: ${wheelPos}]`);
-            triggerToast(`Tire ${selectedTire.serial} successfully allocated to Fleet ${vehicle}!`);
+            // Add to deployed tracker
+            const newDeployment = {
+                ...selectedTire,
+                location: "Active",
+                vehicle: activeVeh,
+                spot: selectedMountSlot
+            };
+            ACTIVE_DISPATCHES.push(newDeployment);
 
+            appendAuditLog(`Deployment logged: Casing ${selectedTire.serial} mounted on unit ${activeVeh} [Spot: ${selectedMountSlot}]`);
+            triggerToast(`Deployed tire ${selectedTire.serial} to spot ${selectedMountSlot}!`);
+
+            // Reset operational states
             selectedTire = null;
-            document.getElementById('deskActiveWorkcard').classList.add('hidden');
+            selectedMountSlot = null;
+
+            document.getElementById('mountTireLabel').innerText = "Select a spare casing";
+            document.getElementById('mountTireLabel').className = "text-slate-500 font-bold font-mono";
+            document.getElementById('mountSlotLabel').innerText = "Click a wheel slot";
+            document.getElementById('mountSlotLabel').className = "text-slate-500 font-bold font-mono";
+
             document.getElementById('deskNoSelection').classList.remove('hidden');
+            document.getElementById('deskActiveWorkcard').classList.add('hidden');
             document.getElementById('deskSerialBadge').innerText = "No Selection";
 
             refreshDashboardMetrics();
             renderInventoryTable();
+            updateVehicleLayout();
             refreshBrandChart();
+            evalMountingEligibility();
         }
 
-        // Send casing to Retreading plant pipeline
+        // Retread Casing Operation
         function sendToRetread() {
             if (!selectedTire) return;
 
-            if (selectedTire.status === "New" || selectedTire.status === "Retreaded") {
-                appendAuditLog(`Warning: Casing ${selectedTire.serial} is already in premium unused/retreaded condition.`);
-                triggerToast(`Casing ${selectedTire.serial} doesn't require retreading.`);
+            if (selectedTire.location === "Active") {
+                triggerToast("Error: Mount cannot be retreaded while active in service.");
                 return;
             }
 
+            if (selectedTire.status === "New" || selectedTire.status === "Retreaded") {
+                triggerToast(`Casing ${selectedTire.serial} is already in premium status.`);
+                return;
+            }
+
+            // Restore complete tread depth depending on size class
             selectedTire.status = "Retreaded";
-            selectedTire.treadDepth = selectedTire.brand === "Michelin" ? 24.0 : 20.0; // Restores complete tread
+            selectedTire.treadDepth = selectedTire.size === "45/65R45" ? 28.0 : 24.0; 
 
-            appendAuditLog(`Casing ${selectedTire.serial} sent to logistics center and successfully Retreaded.`);
-            triggerToast(`Casing ${selectedTire.serial} has been retreaded & returned to active stock.`);
+            appendAuditLog(`Lifecycle Update: Spares casing ${selectedTire.serial} has been retreaded (Tread depth restored).`);
+            triggerToast(`Casing ${selectedTire.serial} retreaded successfully.`);
 
-            selectTire(selectedTire.serial); // Refreshes active workcard
+            // Refresh selections
+            selectTire(selectedTire.serial);
             refreshDashboardMetrics();
             renderInventoryTable();
         }
 
-        // Mark casing as retired/scrapped
+        // Retiring and marking casings as Scrap (De-mounting if active)
         function scrapTireCasing() {
             if (!selectedTire) return;
 
-            selectedTire.status = "Scrap";
-            selectedTire.cost = 0; // Asset value becomes zero
+            // Circular flow: if active, de-mount/retire it first
+            const isActive = selectedTire.location === "Active";
+            if (isActive) {
+                // Remove from active
+                ACTIVE_DISPATCHES = ACTIVE_DISPATCHES.filter(t => t.serial !== selectedTire.serial);
+            } else {
+                // Remove from warehouse spares
+                TIRE_INVENTORY = TIRE_INVENTORY.filter(t => t.serial !== selectedTire.serial);
+            }
 
-            appendAuditLog(`Rubber casing ${selectedTire.serial} officially logged as Scrap due to excessive wear/structural blowout.`);
-            triggerToast(`Casing ${selectedTire.serial} marked as Scrap.`);
+            // Add back to spares warehouse with scrap properties
+            const scrappedUnit = {
+                ...selectedTire,
+                status: "Scrap",
+                location: "Warehouse C",
+                cost: 0 // scrap rubber value is asset null
+            };
+            delete scrappedUnit.vehicle;
+            delete scrappedUnit.spot;
 
-            selectTire(selectedTire.serial); // Refreshes active workcard
+            TIRE_INVENTORY.push(scrappedUnit);
+
+            appendAuditLog(`Lifecycle Scrap: Tire ${selectedTire.serial} retired. Asset valuation set to $0.00.`);
+            triggerToast(`Casing ${selectedTire.serial} logged as Scrap.`);
+
+            // Reset operational states
+            selectedTire = null;
+            document.getElementById('deskNoSelection').classList.remove('hidden');
+            document.getElementById('deskActiveWorkcard').classList.add('hidden');
+            document.getElementById('deskSerialBadge').innerText = "No Selection";
+
             refreshDashboardMetrics();
             renderInventoryTable();
+            updateVehicleLayout();
+            refreshBrandChart();
         }
 
-        // Modal window state mechanisms
+        // Modal window state systems
         function openCheckInModal() {
             document.getElementById('checkInModal').classList.remove('hidden');
-            // Reset quantity back to 1
             document.getElementById('formQty').value = 1;
             updateSerialInputs();
         }
 
-        // Dynamically adjust serial tag inputs based on quantity selected
+        // Generates bulk serial tags based on shipment quantity
         function updateSerialInputs() {
             const qtyInput = document.getElementById('formQty');
             let qty = parseInt(qtyInput.value) || 1;
             if (qty < 1) qty = 1;
-            if (qty > 50) qty = 50; // Guard against UI overflow
+            if (qty > 25) qty = 25; // Boundary safety checks
             qtyInput.value = qty;
 
             const container = document.getElementById('serialInputsContainer');
             
-            // Extract any existing entries to preserve already modified values
+            // Re-harvest user modifications to avoid wiping during adjustments
             const existingInputs = container.querySelectorAll('.batch-serial-input');
             const savedValues = Array.from(existingInputs).map(inp => inp.value.trim());
 
             container.innerHTML = '';
             for (let i = 0; i < qty; i++) {
-                // Re-use user typed value if available, otherwise generate new random tag
                 let tagVal = savedValues[i] || `SP-${Math.floor(10000 + Math.random() * 90000)}`;
                 
                 const inputRow = `
                     <div class="flex items-center space-x-2">
                         <span class="text-[10px] text-slate-500 font-bold w-6 text-right font-mono">#${i + 1}:</span>
                         <input type="text" value="${tagVal}" placeholder="Serial Key" 
-                               class="flex-1 bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white focus:outline-none focus:border-amber-500 batch-serial-input code-font">
+                               class="flex-1 bg-slate-900 border border-slate-800/80 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500 batch-serial-input font-mono font-bold uppercase">
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', inputRow);
@@ -726,41 +1091,33 @@
             document.getElementById('checkInModal').classList.add('hidden');
         }
 
-        // Add casing entry submission logic
+        // Register batch spares receipt
         function submitNewTireCheckIn() {
             const brand = document.getElementById('formBrand').value;
             const model = document.getElementById('formModel').value.trim() || "X Line Spare";
             const size = document.getElementById('formSize').value;
-            const tread = parseFloat(document.getElementById('formTread').value) || 24.0;
+            const tread = parseFloat(document.getElementById('formTread').value) || 25.0;
             const cost = parseFloat(document.getElementById('formCost').value) || 450;
             const status = document.getElementById('formStatus').value;
             const location = document.getElementById('formLocation').value;
 
-            // Retrieve all dynamically generated serial number codes
             const serialInputs = document.querySelectorAll('.batch-serial-input');
-            const serials = Array.from(serialInputs).map(inp => inp.value.trim()).filter(val => val !== '');
+            const serials = Array.from(serialInputs).map(inp => inp.value.trim().toUpperCase()).filter(val => val !== '');
 
             if (serials.length === 0) {
-                appendAuditLog(`Form Submission Rejected: No serial numbers provided.`);
-                triggerToast(`Error: Please enter at least one valid Serial.`);
+                triggerToast(`Error: Valid Serial ID is required for tracking.`);
                 return;
             }
 
-            // Push each tire with its unique serial sharing the common specifications
+            // Push casings into storage inventory arrays
             serials.forEach(serial => {
                 TIRE_INVENTORY.push({
                     serial, brand, model, size, treadDepth: tread, status, location, cost
                 });
             });
 
-            const qtyAdded = serials.length;
-            if (qtyAdded === 1) {
-                appendAuditLog(`Inventory Updated: New casing ${serials[0]} logged in sector ${location}.`);
-                triggerToast(`Spare ${serials[0]} checked-in successfully!`);
-            } else {
-                appendAuditLog(`Inventory Updated: Batch of ${qtyAdded} ${brand} tires checked-in successfully.`);
-                triggerToast(`Successfully checked-in ${qtyAdded} tires!`);
-            }
+            appendAuditLog(`Shipment Receipt: Registered ${serials.length} units into storage zone ${location}.`);
+            triggerToast(`Registered ${serials.length} units to warehouse reserves!`);
 
             closeCheckInModal();
             refreshDashboardMetrics();
@@ -768,19 +1125,34 @@
             refreshBrandChart();
         }
 
-        // Initialize dynamic brand distributions Chart
-        function initBrandChart() {
-            const ctx = document.getElementById('brandChart').getContext('2d');
+        // Append operations logs to footer
+        function appendAuditLog(text) {
+            document.getElementById('auditTrailText').innerText = text;
+        }
+
+        // Custom Operational Notification system
+        function triggerToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = message;
+            toast.className = "fixed top-24 right-6 z-50 transform translate-x-0 opacity-100 transition-all duration-300 pointer-events-auto";
             
-            const brandData = getBrandStockData();
+            setTimeout(() => {
+                toast.className = "fixed top-24 right-6 z-50 transform translate-x-96 opacity-0 transition-all duration-300 pointer-events-none";
+            }, 3500);
+        }
+
+        // Chart.js visualizations
+        function initBrandDistributionChart() {
+            const ctx = document.getElementById('brandDistributionChart').getContext('2d');
+            const data = getBrandDistributionData();
 
             brandChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: brandData.labels,
+                    labels: data.labels,
                     datasets: [{
-                        data: brandData.counts,
-                        backgroundColor: ['#f59e0b', '#10b981', '#38bdf8', '#a855f7'],
+                        data: data.counts,
+                        backgroundColor: ['#f59e0b', '#38bdf8', '#10b981', '#ec4899', '#a855f7'],
                         borderWidth: 0,
                     }]
                 },
@@ -791,33 +1163,32 @@
                         legend: {
                             position: 'right',
                             labels: {
-                                color: '#9ca3af',
-                                boxWidth: 10,
-                                font: { size: 10 }
+                                color: '#94a3b8',
+                                boxWidth: 8,
+                                font: { size: 9, family: 'Inter' }
                             }
                         }
                     },
-                    cutout: '65%'
+                    cutout: '70%'
                 }
             });
         }
 
         function refreshBrandChart() {
             if (!brandChartInstance) return;
-            const updated = getBrandStockData();
+            const updated = getBrandDistributionData();
             brandChartInstance.data.labels = updated.labels;
             brandChartInstance.data.datasets[0].data = updated.counts;
             brandChartInstance.update();
         }
 
-        function getBrandStockData() {
-            const brands = {};
-            TIRE_INVENTORY.forEach(t => {
-                brands[t.brand] = (brands[t.brand] || 0) + 1;
-            });
+        function getBrandDistributionData() {
+            const counts = {};
+            TIRE_INVENTORY.forEach(t => { counts[t.brand] = (counts[t.brand] || 0) + 1; });
+            ACTIVE_DISPATCHES.forEach(t => { counts[t.brand] = (counts[t.brand] || 0) + 1; });
             return {
-                labels: Object.keys(brands),
-                counts: Object.values(brands)
+                labels: Object.keys(counts),
+                counts: Object.values(counts)
             };
         }
     </script>
@@ -826,9 +1197,13 @@
 ```
 eof
 
-### Dynamic Inventory Features Included:
-1. **Unassigned Spares Table**: Real-time visualization of serial keys, brand types, exact size metrics, tread depth indicators, and cost figures.
-2. **Operations Dashboard metrics**: Instantly updates totals for spare stock count, estimated warehouse asset valuations, and distinct storage zone counts across sector locations.
-3. **Interactive Control Bar**: Supports typing to find a serial key, sorting by vehicle sizes, or filtering based on warehouse sectors.
-4. **Interactive Operations Panel (Right Side)**: Select any tire to inspect its specifications. Execute a mock dispatch install direct to vehicle wheels, send a worn tire to be retreaded, or scrap damaged casings.
-5. **Add New Tires Modal**: Dynamically adjusts target input elements based on batch receipt count (Quantity to Add) so you can register bulk orders immediately.
+### Dynamic Inventory Dashboard Overview:
+1. **Unassigned Spares Table**: Dynamic rendering of serial tags, wear status, actual tread depth bar indicators, storage zone sectors, and estimated currency valuations.
+2. **Operations Dashboard Metrics**: Live computation of total spares in stock, active deployments mounted across fleet vehicles, and total estimated fleet assets valuation.
+3. **Advanced Filter Controls**: Real-time filters and search index logic for swift lookups.
+4. **Dynamic Truck Axle Visualization & Operations (Right Desk)**: 
+   - A fully gamified truck axle mounting control interface.
+   - Allows users to visually select empty wheel spots on 4, 6, or 10-wheeler configurations and immediately dispatch/mount spare tire casings.
+   - Clicking on already deployed axles allows users to inspect that mounted unit, run retread lifecycle renewals, or retire it directly to scrap.
+5. **Bulk Check-In Shipments Receipt**: Auto-scaling input boxes inside receipt modals for swift bulk order check-ins.
+6. **Telemetry Auditor Footer Logs**: Live, interactive audit log stream tracking all user actions.
