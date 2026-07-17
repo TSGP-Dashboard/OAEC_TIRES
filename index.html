@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js for inventory analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
@@ -526,6 +528,12 @@
     </footer>
 
     <script>
+        // Supabase Initialization Config
+        const SUPABASE_URL = "https://fmkwpgwhkmxcbhiepiui.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Physical Warehouse Casing Spares
         let TIRE_INVENTORY = [
             { serial: "MI-90112", brand: "Michelin", model: "OTR Steel Belt", size: "45/65R45", treadDepth: 25.0, status: "New", location: "Warehouse A", cost: 1850 },
@@ -621,7 +629,6 @@
 
         // Tab Switching in Control Desk
         function setDeskTab(tab) {
-            activeDeskTab = tab;
             const btnDispatch = document.getElementById('toggle-dispatch-tab');
             const btnLifecycle = document.getElementById('toggle-lifecycle-tab');
             const contentDispatch = document.getElementById('dispatchTabContent');
@@ -876,7 +883,6 @@
 
                     // Update Badge Status Details
                     const badge = document.getElementById('deskStatusBadge');
-                    const style = getStatusStyle(tire.status);
                     badge.innerText = `ACTIVE MOUNT`;
                     badge.className = `text-[9px] px-2.5 py-0.5 rounded font-extrabold uppercase tracking-wider text-sky-400 border bg-sky-500/10 border-sky-500/20`;
                     
@@ -1194,16 +1200,3 @@
     </script>
 </body>
 </html>
-```
-eof
-
-### Dynamic Inventory Dashboard Overview:
-1. **Unassigned Spares Table**: Dynamic rendering of serial tags, wear status, actual tread depth bar indicators, storage zone sectors, and estimated currency valuations.
-2. **Operations Dashboard Metrics**: Live computation of total spares in stock, active deployments mounted across fleet vehicles, and total estimated fleet assets valuation.
-3. **Advanced Filter Controls**: Real-time filters and search index logic for swift lookups.
-4. **Dynamic Truck Axle Visualization & Operations (Right Desk)**: 
-   - A fully gamified truck axle mounting control interface.
-   - Allows users to visually select empty wheel spots on 4, 6, or 10-wheeler configurations and immediately dispatch/mount spare tire casings.
-   - Clicking on already deployed axles allows users to inspect that mounted unit, run retread lifecycle renewals, or retire it directly to scrap.
-5. **Bulk Check-In Shipments Receipt**: Auto-scaling input boxes inside receipt modals for swift bulk order check-ins.
-6. **Telemetry Auditor Footer Logs**: Live, interactive audit log stream tracking all user actions.
