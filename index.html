@@ -37,10 +37,10 @@
                 <!-- Connection Status Badge -->
                 <div class="flex items-center space-x-2 bg-gray-950 px-3 py-1.5 rounded-lg border border-gray-700">
                     <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        <span id="ping-indicator" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span id="status-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Live Cloud</span>
+                    <span id="status-text" class="text-xs font-mono uppercase tracking-wider text-emerald-400">Live Cloud</span>
                 </div>
             </div>
         </div>
@@ -258,16 +258,16 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Brand Manufacturer</label>
-                        <input type="text" id="modal-brand" placeholder="e.g., Bridgestone, Michelin" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                        <input type="text" id="modal-brand" value="Michelin" placeholder="e.g., Bridgestone, Michelin" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Unit Cost ($)</label>
-                            <input type="number" id="modal-cost" min="0" placeholder="e.g., 4200" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                            <input type="number" id="modal-cost" min="0" value="1200" placeholder="e.g., 4200" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">Tread Depth (mm)</label>
-                            <input type="number" step="0.1" id="modal-tread" placeholder="e.g., 28.0" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                            <input type="number" step="0.1" id="modal-tread" value="28.0" placeholder="e.g., 28.0" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
                         </div>
                     </div>
                 </div>
@@ -358,22 +358,53 @@
         const SUPABASE_URL = "https://fmkwpgwhkmxcbhiepiui.supabase.co/rest/v1/"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
 
-        // Initialize Native Supabase Engine
-        const supabase = (SUPABASE_URL !== "YOUR_SUPABASE_URL" && window.supabase) 
-            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
-            : null;
+        // Local Memory Mock Data (Fallback if Supabase is unconfigured)
+        let mockDatabase = [
+            { id: "TR-88402", size: "45/65R45", brand: "Michelin", tread: 28.0, zone: "WH-A", status: "Warehouse Spare", cost: 4500 },
+            { id: "TR-34901", size: "295/80R22.5", brand: "Bridgestone", tread: 24.0, zone: "WH-B", status: "DT-101", cost: 850 },
+            { id: "TR-10293", size: "265/70R17", brand: "Goodyear", tread: 12.5, zone: "WH-C", status: "Warehouse Spare", cost: 350 }
+        ];
+
+        // Initialize Native Supabase Engine (Check if credentials are real)
+        const isSupabaseConfigured = (SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY" && window.supabase);
+        const supabase = isSupabaseConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         let focusedSerial = null;
         let brandChartInstance = null;
-        let globalCachedTires = []; // Cache to support search filtering without refetching
+        let globalCachedTires = []; 
 
-        // --- FETCH DYNAMIC CLOUD DATA ---
+        // Update visual state badge
+        function updateStatusBadge() {
+            const indicator = document.getElementById('ping-indicator');
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (isSupabaseConfigured) {
+                indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                text.innerText = "Live Cloud";
+                text.className = "text-xs font-mono uppercase tracking-wider text-emerald-400";
+            } else {
+                indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+                text.innerText = "Demo Sandbox";
+                text.className = "text-xs font-mono uppercase tracking-wider text-amber-400";
+            }
+        }
+
+        // --- FETCH DYNAMIC CLOUD DATA OR FALLBACK TO LOCAL SANDBOX ---
         async function syncEnginePipeline() {
-            if (!supabase) {
-                console.error("Supabase client is unconfigured. Fill out your credentials keys.");
-                alert("Please configure your custom Supabase URL and Anon Key inside the script configuration block.");
+            updateStatusBadge();
+            
+            if (!isSupabaseConfigured) {
+                // RUNNING IN SANDBOX MODE (Works immediately!)
+                globalCachedTires = [...mockDatabase];
+                renderDashboardData(globalCachedTires);
+                renderWholeInventoryTable(globalCachedTires);
                 return;
             }
+
+            // RUNNING IN LIVE SUPABASE MODE
             try {
                 let { data: tires, error } = await supabase.from('tires').select('*');
                 if (error) throw error;
@@ -507,7 +538,8 @@
         function selectAssetRow(serial) {
             focusedSerial = serial;
             document.getElementById('focused-serial-display').innerText = serial;
-            syncEnginePipeline();
+            // Highlight locally without reloading from remote to keep user experience fast
+            renderDashboardData(globalCachedTires);
         }
 
         // --- NEW DIALOG INTAKE DIALOG FLOW LOGIC ---
@@ -548,7 +580,7 @@
             treadInput.value = (size === "45/65R45") ? "28.0" : "24.0";
         }
 
-        // --- SUPABASE DIRECT OPERATION MUTATIONS ---
+        // --- DATABASE OPERATIONS (SUPABASE OR LOCAL MEMORY MOCK) ---
         async function submitBatchIntake() {
             const size = document.getElementById('modal-size').value;
             const brand = document.getElementById('modal-brand').value.trim();
@@ -582,15 +614,20 @@
                 });
             }
 
-            const { error } = await supabase.from('tires').insert(incomingItems);
-            if (error) {
-                alert("Supabase Insert Failed: " + error.message);
-            } else {
-                // Success - clean fields & sync
-                document.getElementById('modal-brand').value = '';
-                document.getElementById('modal-cost').value = '';
+            if (!isSupabaseConfigured) {
+                // Offline Local push
+                mockDatabase.push(...incomingItems);
                 closeIntakeModal();
                 syncEnginePipeline();
+            } else {
+                // Online Supabase push
+                const { error } = await supabase.from('tires').insert(incomingItems);
+                if (error) {
+                    alert("Supabase Insert Failed: " + error.message);
+                } else {
+                    closeIntakeModal();
+                    syncEnginePipeline();
+                }
             }
         }
 
@@ -599,11 +636,16 @@
             const targetFleet = document.getElementById('dispatch-fleet-select').value;
             if (!tireId) return alert('Select a valid warehouse spare element.');
 
-            const { error } = await supabase.from('tires').update({ status: targetFleet }).eq('id', tireId);
-            if (error) {
-                alert("Supabase Dispatch Failed: " + error.message);
-            } else {
+            if (!isSupabaseConfigured) {
+                // Local Dispatch
+                const item = mockDatabase.find(t => t.id === tireId);
+                if (item) item.status = targetFleet;
                 syncEnginePipeline();
+            } else {
+                // Supabase Dispatch
+                const { error } = await supabase.from('tires').update({ status: targetFleet }).eq('id', tireId);
+                if (error) alert("Supabase Dispatch Failed: " + error.message);
+                else syncEnginePipeline();
             }
         }
 
@@ -611,32 +653,48 @@
             if (!focusedSerial) return alert('Select an asset target from the registry.');
 
             let targetTread = 24.0;
-            let { data, error: selectError } = await supabase.from('tires').select('size').eq('id', focusedSerial).single();
-            
-            if (selectError) return alert("Could not resolve asset data.");
-            if (data && data.size === "45/65R45") targetTread = 28.0;
+            const currentItem = globalCachedTires.find(t => t.id === focusedSerial);
+            if (currentItem && currentItem.size === "45/65R45") targetTread = 28.0;
 
-            const { error } = await supabase.from('tires').update({ tread: targetTread }).eq('id', focusedSerial);
-            if (error) {
-                alert("Supabase Maintenance Update Failed: " + error.message);
-            } else {
+            if (!isSupabaseConfigured) {
+                // Local retread
+                if (currentItem) currentItem.tread = targetTread;
                 syncEnginePipeline();
+            } else {
+                // Supabase retread
+                const { error } = await supabase.from('tires').update({ tread: targetTread }).eq('id', focusedSerial);
+                if (error) alert("Supabase Maintenance Update Failed: " + error.message);
+                else syncEnginePipeline();
             }
         }
 
         async function logAsScrap() {
             if (!focusedSerial) return alert('Select an asset target from the registry.');
 
-            const { error } = await supabase.from('tires')
-                .update({ status: "Scrapped Asset", zone: "WH-C", cost: 0 })
-                .eq('id', focusedSerial);
-                
-            if (error) {
-                alert("Supabase Scrap Execution Failed: " + error.message);
-            } else {
+            if (!isSupabaseConfigured) {
+                // Local Scrap
+                const item = mockDatabase.find(t => t.id === focusedSerial);
+                if (item) {
+                    item.status = "Scrapped Asset";
+                    item.zone = "WH-C";
+                    item.cost = 0;
+                }
                 focusedSerial = null;
                 document.getElementById('focused-serial-display').innerText = "NONE";
                 syncEnginePipeline();
+            } else {
+                // Supabase Scrap
+                const { error } = await supabase.from('tires')
+                    .update({ status: "Scrapped Asset", zone: "WH-C", cost: 0 })
+                    .eq('id', focusedSerial);
+                    
+                if (error) {
+                    alert("Supabase Scrap Execution Failed: " + error.message);
+                } else {
+                    focusedSerial = null;
+                    document.getElementById('focused-serial-display').innerText = "NONE";
+                    syncEnginePipeline();
+                }
             }
         }
 
@@ -679,6 +737,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeInventoryModal();
+                closeIntakeModal();
             }
         });
 
