@@ -57,7 +57,6 @@
                     <i class="fa-solid fa-square-plus text-emerald-500"></i>
                     <h2 class="text-md font-semibold text-gray-200">New Spares Intake Check-In</h2>
                 </div>
-                <!-- Action bound directly to standard button click to bypass form submit failures -->
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Total Tires to be Added</label>
@@ -229,68 +228,89 @@
         </div>
     </main>
 
-    <!-- ================= DYNAMIC BATCH INTAKE DIALOG MODAL ================= -->
+    <!-- ================= DYNAMIC BATCH INTAKE DIALOG MODAL (UPDATED GRID LAYOUT) ================= -->
     <div id="batch-intake-modal" class="fixed inset-0 z-[100] hidden bg-gray-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-gray-800 border border-gray-700 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
             
             <!-- Modal Header -->
-            <div class="p-5 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+            <div class="p-4 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-boxes-stacked text-amber-500 text-xl"></i>
-                    <h3 class="text-lg font-bold text-gray-100">Configure Batch Intake (<span id="modal-batch-count">0</span> Tires)</h3>
+                    <i class="fa-solid fa-boxes-stacked text-amber-500"></i>
+                    <h3 class="text-md font-bold text-gray-100">Configure Batch Intake (<span id="modal-batch-count">0</span> Tires)</h3>
                 </div>
                 <button onclick="closeIntakeModal()" class="text-gray-400 hover:text-gray-200"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <!-- Modal Body (Two-Column Spec Layout) -->
-            <div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-900/40">
-                <!-- Column 1: Common Specifications -->
-                <div class="space-y-4">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-500 border-b border-gray-800 pb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-sliders"></i> Common Characteristics
-                    </h4>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Tire Size Specification</label>
-                        <select id="modal-size" onchange="autoSuggestTreadDepth()" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                            <option value="45/65R45">45/65R45 (Heavy Loader)</option>
-                            <option value="295/80R22.5">295/80R22.5 (Logistics Truck)</option>
-                            <option value="265/70R17">265/70R17 (Support SUV)</option>
-                        </select>
+            <!-- Modal Body (Replaced with custom Wireframe Layout) -->
+            <div class="p-6 overflow-y-auto bg-gray-900/40 space-y-6">
+                
+                <!-- Table Grid Box (Common specs) -->
+                <div class="grid grid-cols-4 border border-gray-700 divide-x divide-y divide-gray-700 bg-gray-950 rounded-lg overflow-hidden text-sm">
+                    <!-- Row 1: Date -->
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1 border-t-0">
+                        Date
                     </div>
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Brand Manufacturer</label>
-                        <input type="text" id="modal-brand" value="Michelin" placeholder="e.g., Bridgestone, Michelin" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
+                    <div class="p-2 col-span-3 border-t-0">
+                        <input type="date" id="modal-date" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm">
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Unit Cost ($)</label>
-                            <input type="number" id="modal-cost" min="0" value="1200" placeholder="e.g., 4200" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Tread Depth (mm)</label>
-                            <input type="number" step="0.1" id="modal-tread" value="28.0" placeholder="e.g., 28.0" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500">
-                        </div>
+
+                    <!-- Row 2: Size & Cost (PHP) -->
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Size
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="text" id="modal-size" value="45/65R45" placeholder="e.g. 45/65R45" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm">
+                    </div>
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Cost (PHP)
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="number" id="modal-cost" value="65000" placeholder="0.00" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm font-mono">
+                    </div>
+
+                    <!-- Row 3: Brand & Ply Rating -->
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Brand
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="text" id="modal-brand" value="Michelin" placeholder="e.g. Michelin" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm">
+                    </div>
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Ply Rating
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="text" id="modal-ply" value="58PR" placeholder="e.g. 58PR" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm">
+                    </div>
+
+                    <!-- Row 4: Compound & Original Tread Depth (mm) -->
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Compound
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="text" id="modal-compound" value="A4" placeholder="e.g. Nylon" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm">
+                    </div>
+                    <div class="p-3 bg-gray-900/80 text-gray-400 font-semibold text-xs uppercase tracking-wider flex items-center col-span-1">
+                        Original Tread Depth (mm)
+                    </div>
+                    <div class="p-2 col-span-1">
+                        <input type="number" step="0.1" id="modal-tread" value="28.0" placeholder="0.0" class="w-full bg-transparent text-gray-200 focus:outline-none px-1 text-sm font-mono">
                     </div>
                 </div>
 
-                <!-- Column 2: Dynamically Populated Serials -->
-                <div class="space-y-4 flex flex-col">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-500 border-b border-gray-800 pb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-barcode"></i> Enter Serial Numbers
-                    </h4>
-                    <div id="serial-inputs-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                        <!-- Dynamic Textbox Elements Injected Here -->
+                <!-- Dynamic Serial Input Matrix -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">SERIAL NUMBER / BRANDING NUMBER</h4>
+                    <div id="serial-inputs-container" class="border border-gray-700 divide-y divide-gray-700 bg-gray-950 rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
+                        <!-- Dynamic serial input fields injected here -->
                     </div>
                 </div>
-            </div>
 
-            <!-- Modal Footer -->
-            <div class="p-4 border-t border-gray-700 bg-gray-800 flex justify-end space-x-3">
-                <button onclick="closeIntakeModal()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium py-2 px-4 rounded transition">Cancel</button>
-                <button onclick="submitBatchIntake()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium py-2 px-5 rounded transition flex items-center space-x-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span>Commit Batch to Database</span>
-                </button>
+                <!-- Action Save Button aligned Left/Mockup style -->
+                <div class="pt-2 flex justify-start">
+                    <button onclick="submitBatchIntake()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-8 rounded border border-emerald-700 shadow transition text-sm">
+                        save
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -356,14 +376,14 @@
     <!-- Core Pipeline JavaScript Architecture -->
     <script>
         // ================= CONFIGURATION CREDENTIALS =================
-        const SUPABASE_URL = "https://fmkwpgwhkmxcbhiepiui.supabase.co/rest/v1/"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
+        const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
         // Local Memory Mock Data (Fallback if Supabase is unconfigured)
         let mockDatabase = [
-            { id: "TR-88402", size: "45/65R45", brand: "Michelin", tread: 28.0, zone: "WH-A", status: "Warehouse Spare", cost: 4500 },
-            { id: "TR-34901", size: "295/80R22.5", brand: "Bridgestone", tread: 24.0, zone: "WH-B", status: "DT-101", cost: 850 },
-            { id: "TR-10293", size: "265/70R17", brand: "Goodyear", tread: 12.5, zone: "WH-C", status: "Warehouse Spare", cost: 350 }
+            { id: "TR-88402", size: "45/65R45", brand: "Michelin", compound: "A4", ply: "58PR", date: "2026-07-15", tread: 28.0, zone: "WH-A", status: "Warehouse Spare", cost: 65000 },
+            { id: "TR-34901", size: "295/80R22.5", brand: "Bridgestone", compound: "Nylon", ply: "16PR", date: "2026-07-16", tread: 24.0, zone: "WH-B", status: "DT-101", cost: 12500 },
+            { id: "TR-10293", size: "265/70R17", brand: "Goodyear", compound: "Standard", ply: "10PR", date: "2026-07-17", tread: 12.5, zone: "WH-C", status: "Warehouse Spare", cost: 8500 }
         ];
 
         // Safe setup flags
@@ -413,7 +433,6 @@
             updateStatusBadge();
             
             if (!isSupabaseConfigured) {
-                // Read from local memory
                 globalCachedTires = [...mockDatabase];
                 renderDashboardData(globalCachedTires);
                 renderWholeInventoryTable(globalCachedTires);
@@ -483,7 +502,7 @@
                             ${tire.status}
                         </span>
                     </td>
-                    <td class="p-3 text-right font-mono text-gray-200">$${Number(tire.cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-mono text-gray-200">₱${Number(tire.cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -494,7 +513,7 @@
 
             if (sparesEl) sparesEl.innerText = spareCount;
             if (activeEl) activeEl.innerText = activeCount;
-            if (valuationEl) valuationEl.innerText = `$${totalValuation.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            if (valuationEl) valuationEl.innerText = `₱${totalValuation.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
             updateZoneProgress('zone-a', zoneA);
             updateZoneProgress('zone-b', zoneB);
@@ -527,7 +546,7 @@
                             ${tire.status}
                         </span>
                     </td>
-                    <td class="p-3.5 text-right font-mono text-emerald-400">$${Number(tire.cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3.5 text-right font-mono text-emerald-400">₱${Number(tire.cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -579,7 +598,7 @@
             renderDashboardData(globalCachedTires);
         }
 
-        // --- NEW DIALOG INTAKE DIALOG FLOW LOGIC ---
+        // --- NEW DIALOG INTAKE DIALOG FLOW LOGIC (UPDATED WITH NEW STRUCTURAL INPUTS) ---
         function openIntakeModal() {
             const countInput = document.getElementById('pre-intake-count');
             if (!countInput) return;
@@ -592,23 +611,28 @@
 
             const modalBatchCount = document.getElementById('modal-batch-count');
             if (modalBatchCount) modalBatchCount.innerText = count;
+
+            // Auto-populate current date
+            const dateInput = document.getElementById('modal-date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
             
-            // Build dynamic text inputs for serial keys
+            // Build simple rows for serial input
             const container = document.getElementById('serial-inputs-container');
             if (container) {
                 container.innerHTML = '';
                 for (let i = 1; i <= count; i++) {
                     const autoMockSerial = "TR-" + Math.floor(10000 + Math.random() * 90000);
                     container.innerHTML += `
-                        <div>
-                            <label class="block text-[11px] text-gray-400 mb-0.5">Serial / Tag ID #${i}</label>
-                            <input type="text" required value="${autoMockSerial}" class="batch-serial-input w-full bg-gray-950 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none focus:border-amber-500 font-mono">
+                        <div class="p-2 flex items-center">
+                            <span class="text-xs text-gray-500 w-12 text-center font-mono border-r border-gray-800 pr-2 mr-2">#${i}</span>
+                            <input type="text" required value="${autoMockSerial}" class="batch-serial-input w-full bg-transparent text-gray-200 focus:outline-none font-mono text-sm px-1">
                         </div>
                     `;
                 }
             }
-
-            autoSuggestTreadDepth();
             
             // Show Modal Window
             const modal = document.getElementById('batch-intake-modal');
@@ -620,46 +644,48 @@
             if (modal) modal.classList.add('hidden');
         }
 
-        function autoSuggestTreadDepth() {
-            const sizeEl = document.getElementById('modal-size');
-            const treadEl = document.getElementById('modal-tread');
-            if (!sizeEl || !treadEl) return;
-
-            treadEl.value = (sizeEl.value === "45/65R45") ? "28.0" : "24.0";
-        }
-
-        // --- DATABASE OPERATIONS (SUPABASE OR LOCAL MEMORY MOCK) ---
+        // --- DATABASE OPERATIONS ---
         async function submitBatchIntake() {
+            const dateEl = document.getElementById('modal-date');
             const sizeEl = document.getElementById('modal-size');
             const brandEl = document.getElementById('modal-brand');
+            const compoundEl = document.getElementById('modal-compound');
             const costEl = document.getElementById('modal-cost');
+            const plyEl = document.getElementById('modal-ply');
             const treadEl = document.getElementById('modal-tread');
 
-            if (!sizeEl || !brandEl || !costEl || !treadEl) return;
+            if (!dateEl || !sizeEl || !brandEl || !compoundEl || !costEl || !plyEl || !treadEl) return;
 
-            const size = sizeEl.value;
+            const date = dateEl.value;
+            const size = sizeEl.value.trim();
             const brand = brandEl.value.trim();
+            const compound = compoundEl.value.trim();
             const cost = parseFloat(costEl.value);
+            const ply = plyEl.value.trim();
             const tread = parseFloat(treadEl.value);
 
-            if (!brand) return alert("Please specify a Brand Manufacturer.");
+            if (!size) return alert("Please specify the Tire Size.");
+            if (!brand) return alert("Please specify the Brand Manufacturer.");
             if (isNaN(cost) || cost < 0) return alert("Please specify a valid Unit Cost.");
-            if (isNaN(tread) || tread < 0) return alert("Please specify a valid Starting Tread Depth.");
+            if (isNaN(tread) || tread < 0) return alert("Please specify starting Tread Depth.");
 
             let zone = "WH-C";
-            if (size === "45/65R45") zone = "WH-A";
-            if (size === "295/80R22.5") zone = "WH-B";
+            if (size.includes("45/65R45")) zone = "WH-A";
+            else if (size.includes("295/80R22.5")) zone = "WH-B";
 
             const inputs = document.querySelectorAll('.batch-serial-input');
             let incomingItems = [];
             
             for (let input of inputs) {
                 const serial = input.value.trim();
-                if (!serial) return alert("All configured items must contain an active serial tag.");
+                if (!serial) return alert("All items must have a serial/branding code.");
                 incomingItems.push({
                     id: serial,
                     size: size,
                     brand: brand,
+                    compound: compound,
+                    ply: ply,
+                    date: date,
                     tread: tread,
                     zone: zone,
                     status: "Warehouse Spare",
@@ -712,7 +738,7 @@
 
             let targetTread = 24.0;
             const currentItem = globalCachedTires.find(t => t.id === focusedSerial);
-            if (currentItem && currentItem.size === "45/65R45") targetTread = 28.0;
+            if (currentItem && currentItem.size.includes("45/65R45")) targetTread = 28.0;
 
             if (!isSupabaseConfigured) {
                 if (currentItem) currentItem.tread = targetTread;
@@ -797,7 +823,7 @@
                     }
                 });
             } catch (err) {
-                console.warn("Chart rendering failed (possible script blocking/network error):", err);
+                console.warn("Chart rendering failed:", err);
             }
         }
 
