@@ -656,32 +656,32 @@
             let OTRMap = {}, TBRMap = {}, SVMap = {};
 
             globalCachedTires.forEach(t => {
-                if (t.status === "Brand New") brandNew++;
-                else if (t.status === "Warehouse Spare") spare++;
-                else if (t.status === "For Repair") repair++;
-                else if (t.status === "Scrapped Asset") scrap++;
-                
-                if (isOperational(t.status)) {
-                    operational++;
-                    
-                    // Case-insensitive database check for mapping the fleet lists cleanly
-                    const normalizedCategory = String(t.category || '').toLowerCase();
-                    const groupClass = t.group || '';
+    if (t.status === "Brand New") brandNew++;
+    else if (t.status === "Warehouse Spare") spare++;
+    else if (t.status === "For Repair") repair++;
+    else if (t.status === "Scrapped Asset") scrap++;
+    
+    if (isOperational(t.status)) {
+        operational++;
+        
+        // FIX: Standardize strings to lowercase to guarantee exact matches with your database
+        const normalizedCategory = String(t.category || '').toLowerCase().trim();
+        const groupClass = String(t.group || '').toUpperCase().trim();
 
-                    if (groupClass === "OTR" || normalizedCategory === "heavy") { 
-                        if(!OTRMap[t.status]) OTRMap[t.status] = []; 
-                        OTRMap[t.status].push(t); 
-                    }
-                    else if (groupClass === "TBR" || normalizedCategory === "logistics") { 
-                        if(!TBRMap[t.status]) TBRMap[t.status] = []; 
-                        TBRMap[t.status].push(t); 
-                    }
-                    else { 
-                        if(!SVMap[t.status]) SVMap[t.status] = []; 
-                        SVMap[t.status].push(t); 
-                    }
-                }
-            });
+        if (groupClass === "OTR" || normalizedCategory === "heavy") { 
+            if(!OTRMap[t.status]) OTRMap[t.status] = []; 
+            OTRMap[t.status].push(t); 
+        }
+        else if (groupClass === "TBR" || normalizedCategory === "logistics") { 
+            if(!TBRMap[t.status]) TBRMap[t.status] = []; 
+            TBRMap[t.status].push(t); 
+        }
+        else if (groupClass === "SV" || normalizedCategory === "support" || normalizedCategory === "sv") { 
+            if(!SVMap[t.status]) SVMap[t.status] = []; 
+            SVMap[t.status].push(t); 
+        }
+    }
+});
 
             document.getElementById('sq-brand-new').innerText = brandNew;
             document.getElementById('sq-total-spares').innerText = spare;
