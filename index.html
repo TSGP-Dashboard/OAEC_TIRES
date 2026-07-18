@@ -20,6 +20,13 @@
             }
         }
     </script>
+    <style>
+        /* Custom scrollbar styling for a cleaner dark UI appearance */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+    </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen selection:bg-amber-500 selection:text-gray-900 text-xs">
 
@@ -103,13 +110,18 @@
                 </div>
 
                 <!-- Technical Registry Table Container -->
-                <div class="bg-gray-900 border border-gray-800 rounded-lg shadow-sm overflow-hidden flex flex-col justify-between">
+                <div class="bg-gray-900 border border-gray-800 rounded-lg shadow-sm flex flex-col justify-between">
                     <div class="px-3 py-2 bg-gray-900/60 border-b border-gray-800 flex justify-between items-center">
                         <div class="flex items-center space-x-1.5">
                             <i class="fa-solid fa-table-list text-amber-500"></i>
                             <h2 class="font-bold text-gray-200 text-xs">Live Technical Inventory Asset Registry</h2>
                         </div>
                         <div class="flex items-center space-x-2">
+                            <!-- RESET FILTERS BUTTON -->
+                            <button onclick="resetAllFilters()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition border border-gray-700">
+                                <i class="fa-solid fa-arrow-rotate-left"></i>
+                                <span>Reset Filters</span>
+                            </button>
                             <!-- EXPORT EXCEL BUTTON -->
                             <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition shadow border border-emerald-600/30">
                                 <i class="fa-solid fa-file-excel"></i>
@@ -119,18 +131,53 @@
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto relative">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-black/20 text-gray-400 text-[10px] tracking-wider uppercase border-b border-gray-800 bg-gray-900">
-                                    <th class="p-2 pl-3 font-semibold text-left">Date Added</th>
-                                    <th class="p-2 font-semibold text-left">Serial / Brand #</th>
+                                    <th class="p-2 pl-3 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'date_added')">
+                                            <span>Date Added</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-date_added" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left Normal-case font-sans"></div>
+                                    </th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'serial_number')">
+                                            <span>Serial / Brand #</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-serial_number" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
                                     <th class="p-2 font-semibold text-left">Group</th>
-                                    <th class="p-2 font-semibold text-left">Size Spec</th>
-                                    <th class="p-2 font-semibold text-left">Make / Brand</th>
-                                    <th class="p-2 font-semibold text-left">Pattern</th>
-                                    <th class="p-2 font-semibold text-left">Ply</th>
-                                    <th class="p-2 font-semibold text-left">Type</th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'tire_size')">
+                                            <span>Size Spec</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-tire_size" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'brand')">
+                                            <span>Make / Brand</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-brand" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'pattern')">
+                                            <span>Pattern</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-pattern" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'ply_rating')">
+                                            <span>Ply</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-ply_rating" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
+                                    <th class="p-2 font-semibold text-left relative">
+                                        <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'type')">
+                                            <span>Type</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
+                                        </div>
+                                        <div id="filter-menu-type" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
+                                    </th>
                                     <th class="p-2 font-semibold text-left">OTD</th>
                                     <th class="p-2 font-semibold text-left">RTD</th>
                                     <th class="p-2 font-semibold text-left">Status</th>
@@ -257,6 +304,17 @@
         let isSupabaseConfigured = false;
         let currentIntakeCount = 1;
 
+        // Custom Column Header Filter State Mapping
+        let columnHeaderFilters = {
+            date_added: 'ALL',
+            serial_number: 'ALL',
+            tire_size: 'ALL',
+            brand: 'ALL',
+            pattern: 'ALL',
+            ply_rating: 'ALL',
+            type: 'ALL'
+        };
+
         // Pagination State Variables
         let currentPage = 1;
         const ITEMS_PER_PAGE = 10;
@@ -354,18 +412,18 @@
 
         function setGroupFilter(groupId) {
             currentGroupFilter = groupId;
-            currentPage = 1; // Reset to page 1 on filter modification
+            currentPage = 1;
             ['ALL', 'OTR', 'TBR', 'SV'].forEach(f => {
                 const btn = document.getElementById(`filter-btn-${f}`);
                 if (f === groupId) btn.className = "px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-gray-950 transition";
                 else btn.className = "px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 bg-gray-800 hover:text-gray-200 transition";
             });
-            processAndRenderCanvasBoard(); // Recalculate metrics based on group
+            processAndRenderCanvasBoard();
         }
 
         function setStatusFilter(statusId) {
             currentStatusFilter = currentStatusFilter === statusId ? 'ALL' : statusId;
-            currentPage = 1; // Reset to page 1
+            currentPage = 1;
             const cardMap = {
                 'Brand New': 'card-Brand-New', 'Warehouse Spare': 'card-Warehouse-Spare',
                 'Operational': 'card-Operational', 'For Repair': 'card-For-Repair', 'Scrapped Asset': 'card-Scrapped-Asset'
@@ -378,15 +436,86 @@
             renderInventoryGridOnly();
         }
 
+        function resetAllFilters() {
+            currentGroupFilter = 'ALL';
+            currentStatusFilter = 'ALL';
+            currentPage = 1;
+            
+            Object.keys(columnHeaderFilters).forEach(key => {
+                columnHeaderFilters[key] = 'ALL';
+            });
+
+            ['ALL', 'OTR', 'TBR', 'SV'].forEach(f => {
+                const btn = document.getElementById(`filter-btn-${f}`);
+                if (f === 'ALL') btn.className = "px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-gray-950 transition";
+                else btn.className = "px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 bg-gray-800 hover:text-gray-200 transition";
+            });
+
+            const cardMap = {
+                'Brand New': 'card-Brand-New', 'Warehouse Spare': 'card-Warehouse-Spare',
+                'Operational': 'card-Operational', 'For Repair': 'card-For-Repair', 'Scrapped Asset': 'card-Scrapped-Asset'
+            };
+            Object.keys(cardMap).forEach(k => {
+                document.getElementById(cardMap[k]).className = "bg-gray-900 border border-gray-800 hover:border-gray-700 cursor-pointer transition rounded-lg p-3 text-center";
+            });
+
+            document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
+
+            processAndRenderCanvasBoard();
+        }
+
         function isOperational(st) {
             return !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(st);
         }
+
+        function toggleHeaderFilterMenu(event, columnKey) {
+            event.stopPropagation();
+            const currentMenu = document.getElementById(`filter-menu-${columnKey}`);
+            const isAlreadyOpen = !currentMenu.classList.contains('hidden');
+            
+            document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
+            
+            if (isAlreadyOpen) return;
+
+            // Gather values present based on Group + Status metrics filters
+            let contextualData = globalCachedTires;
+            if (currentGroupFilter !== 'ALL') contextualData = contextualData.filter(t => t.group === currentGroupFilter);
+            if (currentStatusFilter !== 'ALL') {
+                if (currentStatusFilter === 'Operational') contextualData = contextualData.filter(t => isOperational(t.status));
+                else contextualData = contextualData.filter(t => t.status === currentStatusFilter);
+            }
+
+            const uniqueValues = ['ALL', ...new Set(contextualData.map(item => String(item[columnKey] || 'N/A').trim()))];
+            
+            currentMenu.innerHTML = uniqueValues.map(val => {
+                const isSelected = columnHeaderFilters[columnKey] === val;
+                return `
+                    <div onclick="selectHeaderFilterValue('${columnKey}', '${val}')" class="px-2 py-1 text-[10px] rounded cursor-pointer transition text-gray-300 hover:bg-amber-500 hover:text-gray-950 flex items-center justify-between ${isSelected ? 'bg-gray-800 text-amber-400 font-bold' : ''}">
+                        <span>${val}</span>
+                        ${isSelected ? '<i class="fa-solid fa-check text-[8px]"></i>' : ''}
+                    </div>
+                `;
+            }).join('');
+
+            currentMenu.classList.remove('hidden');
+        }
+
+        function selectHeaderFilterValue(columnKey, value) {
+            columnHeaderFilters[columnKey] = value;
+            currentPage = 1;
+            document.getElementById(`filter-menu-${columnKey}`).classList.add('hidden');
+            renderInventoryGridOnly();
+        }
+
+        // Close active column filters dropdown menus when anywhere outside is clicked
+        document.addEventListener('click', () => {
+            document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
+        });
 
         function processAndRenderCanvasBoard() {
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
             let otrList = [], tbrList = [], svList = [];
 
-            // 1. Calculate active fleet lists globally first (always maps complete scope)
             globalCachedTires.forEach(t => {
                 if (isOperational(t.status)) {
                     if (t.group === "OTR") otrList.push(t);
@@ -395,13 +524,11 @@
                 }
             });
 
-            // 2. Filter dataset metrics context dynamically by current Group Class selection
             let metricsData = globalCachedTires;
             if (currentGroupFilter !== 'ALL') {
                 metricsData = globalCachedTires.filter(t => t.group === currentGroupFilter);
             }
 
-            // 3. Increment counters strictly within selected group view
             metricsData.forEach(t => {
                 if (t.status === "Brand New") brandNew++;
                 else if (t.status === "Warehouse Spare") spare++;
@@ -410,14 +537,12 @@
                 else if (isOperational(t.status)) operational++;
             });
 
-            // 4. Update the dashboard status cards
             document.getElementById('sq-brand-new').innerText = brandNew;
             document.getElementById('sq-total-spares').innerText = spare;
             document.getElementById('sq-operational').innerText = operational;
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
             
-            // Total assignments card remains absolute to standard deployment matrix
             document.getElementById('metric-active-fleet').innerText = globalCachedTires.filter(t => isOperational(t.status)).length;
             document.getElementById('badge-otr-count').innerText = otrList.length;
             document.getElementById('badge-tbr-count').innerText = tbrList.length;
@@ -446,16 +571,24 @@
 
             let data = globalCachedTires;
 
+            // Apply capsule component filters
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
             if (currentStatusFilter !== 'ALL') {
                 if (currentStatusFilter === 'Operational') data = data.filter(t => isOperational(t.status));
                 else data = data.filter(t => t.status === currentStatusFilter);
             }
 
+            // Apply interactive column dropdown header filters
+            Object.keys(columnHeaderFilters).forEach(key => {
+                const targetCriteria = columnHeaderFilters[key];
+                if (targetCriteria !== 'ALL') {
+                    data = data.filter(item => String(item[key] || 'N/A').trim() === targetCriteria);
+                }
+            });
+
             const totalItems = data.length;
             document.getElementById('inventory-counter-badge').innerText = `${totalItems} Items Listed`;
 
-            // Calculate pagination splits
             const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             
@@ -464,7 +597,6 @@
             
             const paginatedData = data.slice(startIndex, endIndex);
 
-            // Sync structural info bar navigation details
             document.getElementById('pagination-info').innerText = `Showing ${totalItems === 0 ? 0 : startIndex + 1}-${endIndex} of ${totalItems} items`;
             document.getElementById('btn-page-prev').disabled = (currentPage === 1);
             document.getElementById('btn-page-next').disabled = (currentPage === totalPages || totalItems === 0);
@@ -510,7 +642,6 @@
             renderInventoryGridOnly();
         }
 
-        // CSV Engine for generation of valid Excel readable data formats
         function exportToExcel() {
             let data = globalCachedTires;
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
@@ -518,6 +649,12 @@
                 if (currentStatusFilter === 'Operational') data = data.filter(t => isOperational(t.status));
                 else data = data.filter(t => t.status === currentStatusFilter);
             }
+            Object.keys(columnHeaderFilters).forEach(key => {
+                const targetCriteria = columnHeaderFilters[key];
+                if (targetCriteria !== 'ALL') {
+                    data = data.filter(item => String(item[key] || 'N/A').trim() === targetCriteria);
+                }
+            });
 
             if (data.length === 0) {
                 alert("The active filter scope view contains zero assets. Transfer execution canceled.");
@@ -549,7 +686,7 @@
             downloadAnchor.setAttribute("href", encodedUri);
             
             const timestamp = new Date().toISOString().slice(0,10);
-            downloadAnchor.setAttribute("download", `TyreTrack_Export_${currentGroupFilter}__${timestamp}.csv`);
+            downloadAnchor.setAttribute("download", `TyreTrack_Export_Scoped_${timestamp}.csv`);
             document.body.appendChild(downloadAnchor);
             
             downloadAnchor.click();
@@ -604,7 +741,7 @@
                                 <input type="text" id="add-ply" placeholder="58PR" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-gray-400 mb-0.5">Orig RTD</label>
+                                <label class="block text-gray-400 mb-0.5">OTD</label>
                                 <input type="number" step="0.1" id="add-orig" placeholder="28" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono focus:outline-none">
                             </div>
                         </div>
