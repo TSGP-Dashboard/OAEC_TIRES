@@ -275,6 +275,18 @@
                         <label class="block text-gray-400 text-[10px] mb-0.5">Remaining Tread Depth (mm)</label>
                         <input type="number" step="0.1" id="update-modal-rem-tread" class="w-full bg-gray-950 border border-gray-800 rounded p-1.5 text-gray-200 focus:outline-none font-mono">
                     </div>
+                    <div>
+                        <label class="block text-gray-400 text-[10px] mb-0.5">Pattern</label>
+                        <input type="text" id="update-modal-pattern" placeholder="e.g. A4" class="w-full bg-gray-950 border border-gray-800 rounded p-1.5 text-gray-200 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-[10px] mb-0.5">Ply Rating</label>
+                        <input type="text" id="update-modal-ply-rating" placeholder="e.g. 58PR" class="w-full bg-gray-950 border border-gray-800 rounded p-1.5 text-gray-200 focus:outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-gray-400 text-[10px] mb-0.5">Original Tread Depth (mm) / OTD</label>
+                        <input type="number" step="0.1" id="update-modal-orig-tread" class="w-full bg-gray-950 border border-gray-800 rounded p-1.5 text-gray-200 focus:outline-none font-mono">
+                    </div>
                 </div>
 
                 <div class="flex space-x-2 pt-2">
@@ -642,6 +654,7 @@
             renderInventoryGridOnly();
         }
 
+        // CSV/Excel Export Pipeline
         function exportToExcel() {
             let data = globalCachedTires;
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
@@ -741,7 +754,7 @@
                                 <input type="text" id="add-ply" placeholder="58PR" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-gray-400 mb-0.5">OTD</label>
+                                <label class="block text-gray-400 mb-0.5">Orig RTD</label>
                                 <input type="number" step="0.1" id="add-orig" placeholder="28" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono focus:outline-none">
                             </div>
                         </div>
@@ -799,6 +812,9 @@
 
             document.getElementById('update-modal-serial').innerText = item.serial_number;
             document.getElementById('update-modal-rem-tread').value = item.remaining_tread_depth;
+            document.getElementById('update-modal-pattern').value = item.pattern || '';
+            document.getElementById('update-modal-ply-rating').value = item.ply_rating || '';
+            document.getElementById('update-modal-orig-tread').value = item.original_tread_depth || '';
 
             const isOp = isOperational(item.status);
             const statusSelect = document.getElementById('update-modal-status');
@@ -834,6 +850,9 @@
             const selectVal = document.getElementById('update-modal-status').value;
             const chassisVal = document.getElementById('update-modal-chassis-id').value.trim().toUpperCase();
             const remTread = parseFloat(document.getElementById('update-modal-rem-tread').value) || 0;
+            const patternVal = document.getElementById('update-modal-pattern').value.trim();
+            const plyVal = document.getElementById('update-modal-ply-rating').value.trim();
+            const origTread = parseFloat(document.getElementById('update-modal-orig-tread').value) || 0;
 
             let finalStatus = selectVal;
             if (selectVal === "CHASSIS_MOUNT") {
@@ -846,13 +865,22 @@
                 if (target) {
                     target.status = finalStatus;
                     target.remaining_tread_depth = remTread;
+                    target.pattern = patternVal;
+                    target.ply_rating = plyVal;
+                    target.original_tread_depth = origTread;
                 }
                 closeUpdateModal();
                 syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires')
-                        .update({ status: finalStatus, remaining_tread_depth: remTread })
+                        .update({ 
+                            status: finalStatus, 
+                            remaining_tread_depth: remTread,
+                            pattern: patternVal,
+                            ply_rating: plyVal,
+                            original_tread_depth: origTread
+                        })
                         .eq('serial_number', currentUpdateSerialTarget);
                     if (error) throw error;
                     closeUpdateModal();
