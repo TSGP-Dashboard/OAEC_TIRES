@@ -396,11 +396,13 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
 
         let mockDatabase = [];
+        let mockEquipmentDatabase = [];
         let activeTab = 'inventory';
         let currentGroupFilter = 'ALL';
         let currentStatusFilter = 'ALL';
         let currentUpdateSerialTarget = null;
         let globalCachedTires = []; 
+        let globalCachedEquipment = [];
         let supabaseClient = null;
         let isSupabaseConfigured = false;
         let currentIntakeCount = 1;
@@ -435,24 +437,32 @@
                 "SV": { size: "265/70R17", pattern: "Standard Road", ply: "10PR", orig: 14.5, type: "Tube Type" }
             };
 
-            // Setup mock equipment vehicles with deterministic tires
-            const mockFleets = {
-                "OTR": ["HD-TRK01", "HD-TRK02", "HD-TRK03"],
-                "TBR": ["LOG-TRN01", "LOG-TRN02", "LOG-TRN03"],
-                "SV": ["SUP-VAN01", "SUP-VAN02"]
-            };
+            // Master data definitions for machinery layout tracks
+            mockEquipmentDatabase = [
+                { id: "HD-TRK01", group: "OTR", category: "heavy", tire_size: "45/65R45" },
+                { id: "HD-TRK02", group: "OTR", category: "heavy", tire_size: "45/65R45" },
+                { id: "HD-TRK03", group: "OTR", category: "heavy", tire_size: "45/65R45" },
+                { id: "LOG-TRN01", group: "TBR", category: "logistics", tire_size: "295/80R22.5" },
+                { id: "LOG-TRN02", group: "TBR", category: "logistics", tire_size: "295/80R22.5" },
+                { id: "LOG-TRN03", group: "TBR", category: "logistics", tire_size: "295/80R22.5" },
+                { id: "SUP-VAN01", group: "SV", category: "support", tire_size: "265/70R17" },
+                { id: "SUP-VAN02", group: "SV", category: "support", tire_size: "265/70R17" }
+            ];
 
             // Inject tires pre-mounted to fleets
-            Object.keys(mockFleets).forEach(grp => {
+            mockEquipmentDatabase.forEach(equip => {
+                const grp = equip.group;
                 const spec = specs[grp];
-                mockFleets[grp].forEach(equip => {
-                    const totalPositions = grp === "OTR" ? 4 : grp === "TBR" ? 8 : 4;
+                const totalPositions = grp === "OTR" ? 4 : grp === "TBR" ? 8 : 4;
+                
+                // Mount tires on only some equipment to demonstrate unmounted visibility
+                if(equip.id !== "HD-TRK03" && equip.id !== "LOG-TRN03") {
                     for(let p = 1; p <= totalPositions; p++) {
                         mockDatabase.push({
                             date_added: getTodayDateString(),
                             serial_number: `TR-${Math.floor(21000 + Math.random() * 68000)}`,
                             group: grp,
-                            category: grp === "OTR" ? "heavy" : (grp === "TBR" ? "logistics" : "support"),
+                            category: equip.category,
                             tire_size: spec.size,
                             brand: brands[Math.floor(Math.random() * brands.length)],
                             pattern: spec.pattern,
@@ -460,10 +470,10 @@
                             type: spec.type,
                             original_tread_depth: spec.orig,
                             remaining_tread_depth: parseFloat((Math.random() * (spec.orig - 6) + 5).toFixed(1)),
-                            status: equip
+                            status: equip.id
                         });
                     }
-                });
+                }
             });
 
             // Generative spare inventory items
@@ -512,15 +522,26 @@
                 if(text) { text.innerText = "Live Database"; text.className = "text-[9px] font-mono uppercase tracking-wider text-emerald-400"; }
                 
                 try {
-                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
-                    if (error) throw error;
-                    globalCachedTires = data || [];
-                } catch (e) { globalCachedTires = [...mockDatabase]; }
+                    const [tiresResponse, equipmentResponse] = await Promise.all([
+                        supabaseClient.from('tires').select('*').order('created_at', { ascending: false }),
+                        supabaseClient.from('equipment').select('*')
+                    ]);
+                    
+                    if (tiresResponse.error) throw tiresResponse.error;
+                    if (equipmentResponse.error) throw equipmentResponse.error;
+                    
+                    globalCachedTires = tiresResponse.data || [];
+                    globalCachedEquipment = equipmentResponse.data || [];
+                } catch (e) { 
+                    globalCachedTires = [...mockDatabase]; 
+                    globalCachedEquipment = [...mockEquipmentDatabase];
+                }
             } else {
                 if(indicator) indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
                 if(dot) dot.className = "relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500";
                 if(text) { text.innerText = "Sandbox Mode"; text.className = "text-[9px] font-mono uppercase tracking-wider text-amber-400"; }
                 globalCachedTires = [...mockDatabase];
+                globalCachedEquipment = [...mockEquipmentDatabase];
             }
             processAndRenderCanvasBoard();
         }
@@ -653,35 +674,15 @@
 
         function processAndRenderCanvasBoard() {
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
-            let OTRMap = {}, TBRMap = {}, SVMap = {};
-
+            
+            // 1. Core inventory metrics calculated from live tires table
             globalCachedTires.forEach(t => {
-    if (t.status === "Brand New") brandNew++;
-    else if (t.status === "Warehouse Spare") spare++;
-    else if (t.status === "For Repair") repair++;
-    else if (t.status === "Scrapped Asset") scrap++;
-    
-    if (isOperational(t.status)) {
-        operational++;
-        
-        // FIX: Standardize strings to lowercase to guarantee exact matches with your database
-        const normalizedCategory = String(t.category || '').toLowerCase().trim();
-        const groupClass = String(t.group || '').toUpperCase().trim();
-
-        if (groupClass === "OTR" || normalizedCategory === "heavy") { 
-            if(!OTRMap[t.status]) OTRMap[t.status] = []; 
-            OTRMap[t.status].push(t); 
-        }
-        else if (groupClass === "TBR" || normalizedCategory === "logistics") { 
-            if(!TBRMap[t.status]) TBRMap[t.status] = []; 
-            TBRMap[t.status].push(t); 
-        }
-        else if (groupClass === "SV" || normalizedCategory === "support" || normalizedCategory === "sv") { 
-            if(!SVMap[t.status]) SVMap[t.status] = []; 
-            SVMap[t.status].push(t); 
-        }
-    }
-});
+                if (t.status === "Brand New") brandNew++;
+                else if (t.status === "Warehouse Spare") spare++;
+                else if (t.status === "For Repair") repair++;
+                else if (t.status === "Scrapped Asset") scrap++;
+                if (isOperational(t.status)) operational++;
+            });
 
             document.getElementById('sq-brand-new').innerText = brandNew;
             document.getElementById('sq-total-spares').innerText = spare;
@@ -689,22 +690,48 @@
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
 
-            document.getElementById('badge-otr-count').innerText = Object.keys(OTRMap).length;
-            document.getElementById('badge-tbr-count').innerText = Object.keys(TBRMap).length;
-            document.getElementById('badge-sv-count').innerText = Object.keys(SVMap).length;
+            // 2. Filter comprehensive DB equipment lists into functional UI lanes
+            const otrEquipment = globalCachedEquipment.filter(eq => String(eq.group || eq.category).toUpperCase().trim() === "OTR");
+            const tbrEquipment = globalCachedEquipment.filter(eq => String(eq.group || eq.category).toUpperCase().trim() === "TBR");
+            const svEquipment = globalCachedEquipment.filter(eq => {
+                const check = String(eq.group || eq.category).toUpperCase().trim();
+                return check === "SV" || check === "SUPPORT";
+            });
 
-            const makeListHTML = (map) => {
-                return Object.keys(map).map(chassis => `
-                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
-                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${chassis}</span>
-                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${map[chassis].length} Positions</span>
-                    </div>
-                `).join('');
+            // 3. Render exact registry tracking sizes to the lanes headers
+            document.getElementById('badge-otr-count').innerText = otrEquipment.length;
+            document.getElementById('badge-tbr-count').innerText = tbrEquipment.length;
+            document.getElementById('badge-sv-count').innerText = svEquipment.length;
+
+            // 4. Component list builder mapping live allocation numbers dynamically
+            const makeListHTML = (equipmentArray) => {
+                if (!equipmentArray.length) {
+                    return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No equipment entries found in DB</p>';
+                }
+                
+                return equipmentArray.map(eq => {
+                    const machineId = eq.equipment_id || eq.id || 'Unknown';
+                    const groupName = eq.group || 'OTR';
+                    const tireSize = eq.tire_size || 'Standard';
+
+                    // Track active allocations relative to master machine tracking strings
+                    const activePositions = globalCachedTires.filter(t => 
+                        String(t.status).toUpperCase().trim() === String(machineId).toUpperCase().trim()
+                    ).length;
+
+                    return `
+                        <div onclick="launchReplacementModule('${machineId}', '${groupName}', '${tireSize}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                            <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${machineId}</span>
+                            <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${activePositions} Mounted</span>
+                        </div>
+                    `;
+                }).join('');
             };
 
-            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(OTRMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(TBRMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(SVMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            // 5. Populate layout structural nodes safely
+            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(otrEquipment);
+            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(tbrEquipment);
+            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(svEquipment);
 
             renderInventoryGridOnly();
             renderUtilityPanel();
@@ -719,15 +746,19 @@
             document.getElementById('replace-header-date').innerText = getTodayDateString();
             document.getElementById('replace-input-odometer').value = '';
 
-            const boundTires = globalCachedTires.filter(t => t.status === chassisId);
+            const boundTires = globalCachedTires.filter(t => String(t.status).toUpperCase().trim() === String(chassisId).toUpperCase().trim());
             const gridContainer = document.getElementById('replacement-grid-rows');
             gridContainer.innerHTML = '';
 
             // Filter context mapping inventory availability explicitly as requested
             const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
 
-            boundTires.forEach((tire, index) => {
+            // Default layout row constraints to match typical equipment footprints if zero tires are mounted
+            const maxPositions = boundTires.length || (groupClass === "OTR" ? 4 : groupClass === "TBR" ? 8 : 4);
+
+            for (let index = 0; index < maxPositions; index++) {
                 const posId = index + 1;
+                const tire = boundTires[index] || { brand: '--', serial_number: 'EMPTY NODE', remaining_tread_depth: '0.0' };
                 const row = document.createElement('div');
                 row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
                 
@@ -736,31 +767,30 @@
                     <div class="col-span-1 text-gray-400 px-1 truncate text-left font-sans">${tire.brand}</div>
                     <div class="col-span-1 font-bold text-amber-500 tracking-wider">${tire.serial_number}</div>
                     <div class="col-span-1 px-1">
-                        <select id="rem-reason-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
+                        <select id="rem-reason-POS${posId}" ${tire.serial_number === 'EMPTY NODE' ? 'disabled' : ''} class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none disabled:opacity-40">
                             <option value="">-- Select --</option>
                             <option value="CHANGE-OUT">1. CHANGE-OUT</option>
                             <option value="WORN-OUT">2. WORN-OUT</option>
                             <option value="IMPACT BREAK">3. IMPACT BREAK</option>
                             <option value="PUNCTURED">4. PUNCTURED</option>
-                            <option value="CUTS">5. CUTS (SIDEWALL, SHOULDER, TREAD, BEAD)</option>
-                            <option value="TREAD CHUNKING">6. TREAD CHUNKING/CHIPPING</option>
-                            <option value="SEPARATION">7. SEPARATION (TREAD, HEAT)</option>
+                            <option value="CUTS">5. CUTS</option>
+                            <option value="TREAD CHUNKING">6. TREAD CHUNKING</option>
+                            <option value="SEPARATION">7. SEPARATION</option>
                             <option value="BULGING">8. BULGING</option>
                             <option value="OTHERS">9. OTHERS</option>
                         </select>
                     </div>
                     <div class="col-span-1 px-1">
-                        <input type="number" step="0.1" id="rem-rtd-POS${posId}" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-center font-mono text-gray-300 outline-none">
+                        <input type="number" step="0.1" id="rem-rtd-POS${posId}" value="${tire.remaining_tread_depth}" ${tire.serial_number === 'EMPTY NODE' ? 'disabled' : ''} class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-center font-mono text-gray-300 outline-none disabled:opacity-40">
                     </div>
                     <div class="col-span-1 px-1 border-r border-gray-800">
-                        <select id="rem-disp-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
+                        <select id="rem-disp-POS${posId}" ${tire.serial_number === 'EMPTY NODE' ? 'disabled' : ''} class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none disabled:opacity-40">
                             <option value="">-- Select --</option>
                             <option value="FOR SPARE">1. FOR SPARE</option>
                             <option value="FOR REPAIR">2. FOR REPAIR</option>
                             <option value="FOR ROTATION">3. FOR ROTATION</option>
                             <option value="FOR EVALUATION">4. FOR EVALUATION</option>
                             <option value="SCRAP">5. SCRAP</option>
-                            <option value="WARRANTY">6. WARRANTY</option>
                         </select>
                     </div>
 
@@ -779,7 +809,7 @@
                     <div class="col-span-2 text-left truncate text-gray-500 px-1.5 text-[10px] font-sans" id="inst-remarks-POS${posId}">--</div>
                 `;
                 gridContainer.appendChild(row);
-            });
+            }
 
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
         }
@@ -810,9 +840,8 @@
                 return;
             }
 
-            // Client data mutation cycle
             const rows = document.getElementById('replacement-grid-rows').children;
-            const targetFleetTires = globalCachedTires.filter(t => t.status === equipId);
+            const targetFleetTires = globalCachedTires.filter(t => String(t.status).toUpperCase().trim() === String(equipId).toUpperCase().trim());
 
             for (let i = 0; i < rows.length; i++) {
                 const posId = i + 1;
@@ -821,26 +850,31 @@
                 if (installSerial) {
                     const removedTire = targetFleetTires[i];
                     const installedTire = globalCachedTires.find(t => t.serial_number === installSerial);
-                    const newDisp = document.getElementById(`rem-disp-POS${posId}`).value || "Warehouse Spare";
+                    
+                    let newDisp = "Warehouse Spare";
+                    const dispEl = document.getElementById(`rem-disp-POS${posId}`);
+                    if(dispEl) newDisp = dispEl.value || "Warehouse Spare";
 
-                    if(removedTire && installedTire) {
-                        // Apply status updates to mock db or target cloud mappings[cite: 3]
-                        let targetStatus = "Warehouse Spare";
-                        if (newDisp === "SCRAP") targetStatus = "Scrapped Asset";
-                        else if (newDisp === "FOR REPAIR") targetStatus = "For Repair";
-
-                        removedTire.status = targetStatus;
-                        removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
-                        
-                        // Execute mapping to the machine
-                        installedTire.status = equipId;
-
-                        // Post changes back to Supabase if config is initialized
-                        if (isSupabaseConfigured) {
-                            try {
-                                await supabaseClient.from('tires').update({ status: targetStatus, remaining_tread_depth: removedTire.remaining_tread_depth }).eq('serial_number', removedTire.serial_number);
+                    if (!isSupabaseConfigured) {
+                        if (removedTire) {
+                            removedTire.status = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
+                            removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
+                        }
+                        if (installedTire) {
+                            installedTire.status = equipId;
+                        }
+                    } else {
+                        try {
+                            if (removedTire) {
+                                const remStat = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
+                                const remTreadVal = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
+                                await supabaseClient.from('tires').update({ status: remStat, remaining_tread_depth: remTreadVal }).eq('serial_number', removedTire.serial_number);
+                            }
+                            if (installedTire) {
                                 await supabaseClient.from('tires').update({ status: equipId }).eq('serial_number', installedTire.serial_number);
-                            } catch (err) { console.error("Cloud mutation failed", err); }
+                            }
+                        } catch (e) {
+                            console.error("Cloud mutation trace failure index:", e.message);
                         }
                     }
                 }
