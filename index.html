@@ -84,8 +84,8 @@
             <!-- SECTION A: TIRES INVENTORY MODULE WORKSPACE CANVAS -->
             <div id="canvas-inventory" class="tab-canvas space-y-6">
                 
-                <!-- Top Status Squares Metric Grid (Clickable Filters) -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Expanded Status Squares Metric Grid (5 Cards Now!) -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div onclick="setStatusFilter('Brand New')" id="card-Brand-New" class="bg-gray-900 border border-gray-800 hover:border-emerald-500/50 cursor-pointer transition rounded-xl p-4 shadow-sm group">
                         <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider group-hover:text-emerald-400 transition">Brand New</p>
                         <h3 id="sq-brand-new" class="text-3xl font-bold mt-2 text-emerald-400 font-mono">0</h3>
@@ -93,6 +93,10 @@
                     <div onclick="setStatusFilter('Warehouse Spare')" id="card-Warehouse-Spare" class="bg-gray-900 border border-gray-800 hover:border-blue-500/50 cursor-pointer transition rounded-xl p-4 shadow-sm group">
                         <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider group-hover:text-blue-400 transition">Total Spares</p>
                         <h3 id="sq-total-spares" class="text-3xl font-bold mt-2 text-blue-400 font-mono">0</h3>
+                    </div>
+                    <div onclick="setStatusFilter('Operational')" id="card-Operational" class="bg-gray-900 border border-gray-800 hover:border-purple-500/50 cursor-pointer transition rounded-xl p-4 shadow-sm group">
+                        <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider group-hover:text-purple-400 transition">Operational</p>
+                        <h3 id="sq-operational" class="text-3xl font-bold mt-2 text-purple-400 font-mono">0</h3>
                     </div>
                     <div onclick="setStatusFilter('For Repair')" id="card-For-Repair" class="bg-gray-900 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition rounded-xl p-4 shadow-sm group">
                         <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider group-hover:text-amber-500 transition">For Repair</p>
@@ -417,6 +421,7 @@
             const cardMap = {
                 'Brand New': { el: 'card-Brand-New', active: 'border-emerald-500 bg-emerald-950/20' },
                 'Warehouse Spare': { el: 'card-Warehouse-Spare', active: 'border-blue-500 bg-blue-950/20' },
+                'Operational': { el: 'card-Operational', active: 'border-purple-500 bg-purple-950/20' },
                 'For Repair': { el: 'card-For-Repair', active: 'border-amber-500 bg-amber-950/20' },
                 'Scrapped Asset': { el: 'card-Scrapped-Asset', active: 'border-rose-500 bg-rose-950/20' }
             };
@@ -508,22 +513,25 @@
 
         // --- TRANSFORMATIONS & RENDER LOGIC ---
         function processAndRenderAllCanvas() {
-            let brandNew = 0, totalSpares = 0, forRepair = 0, scrapped = 0;
+            let brandNew = 0, totalSpares = 0, operational = 0, forRepair = 0, scrapped = 0;
             let activeFleetCount = 0;
 
             let heavyList = [], logisticsList = [], supportList = [];
             let scrapLedgerItems = [];
 
             globalCachedTires.forEach(tire => {
+                const isBoundToFleet = !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(tire.status);
+
                 if (tire.status === "Brand New") brandNew++;
                 else if (tire.status === "Warehouse Spare") totalSpares++;
                 else if (tire.status === "For Repair") forRepair++;
                 else if (tire.status === "Scrapped Asset") {
                     scrapped++;
                     scrapLedgerItems.push(tire);
+                } else if (isBoundToFleet) {
+                    operational++;
                 }
 
-                const isBoundToFleet = !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(tire.status);
                 if (isBoundToFleet) {
                     activeFleetCount++;
                     if (tire.status.startsWith("DT-")) heavyList.push(tire);
@@ -534,6 +542,7 @@
 
             document.getElementById('sq-brand-new').innerText = brandNew.toLocaleString();
             document.getElementById('sq-total-spares').innerText = totalSpares.toLocaleString();
+            document.getElementById('sq-operational').innerText = operational.toLocaleString();
             document.getElementById('sq-for-repair').innerText = forRepair.toLocaleString();
             document.getElementById('sq-scrapped').innerText = scrapped.toLocaleString();
             document.getElementById('metric-active-fleet').innerText = activeFleetCount.toLocaleString();
@@ -542,6 +551,10 @@
             renderFleetPillars(heavyList, logisticsList, supportList);
             renderReportsLedger(scrapLedgerItems);
             renderUtilityPanel();
+        }
+
+        function isTireOperational(statusText) {
+            return !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(statusText);
         }
 
         function renderInventoryGridOnly() {
@@ -558,16 +571,20 @@
 
             // Step B: Apply horizontal capsule asset type filter
             if (currentFleetFilter === 'HEAVY') {
-                filtered = filtered.filter(t => t.status.startsWith("DT-") || t.zone === "WH-A");
+                filtered = filtered.filter(t => isTireOperational(t.status) ? t.status.startsWith("DT-") : t.zone === "WH-A");
             } else if (currentFleetFilter === 'LOGISTICS') {
-                filtered = filtered.filter(t => t.status.startsWith("LM-") || t.zone === "WH-B");
+                filtered = filtered.filter(t => isTireOperational(t.status) ? t.status.startsWith("LM-") : t.zone === "WH-B");
             } else if (currentFleetFilter === 'SUV') {
-                filtered = filtered.filter(t => t.status.startsWith("SU-") || t.zone === "WH-C");
+                filtered = filtered.filter(t => isTireOperational(t.status) ? t.status.startsWith("SU-") : t.zone === "WH-C");
             }
 
             // Step C: Apply Clickable Metric Card Square filter
             if (currentStatusFilter !== 'ALL') {
-                filtered = filtered.filter(t => t.status === currentStatusFilter);
+                if (currentStatusFilter === 'Operational') {
+                    filtered = filtered.filter(t => isTireOperational(t.status));
+                } else {
+                    filtered = filtered.filter(t => t.status === currentStatusFilter);
+                }
             }
 
             document.getElementById('inventory-counter-badge').innerText = `${filtered.length.toLocaleString()} Operational Items`;
@@ -583,7 +600,7 @@
                     if (disp) disp.innerText = tire.id;
                 };
 
-                let statusBadge = `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-gray-800 border border-gray-700 text-gray-300">${tire.status}</span>`;
+                let statusBadge = `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-purple-950 text-purple-400 border border-purple-900 font-mono">${tire.status}</span>`;
                 if (tire.status === "Brand New") statusBadge = `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-950 text-emerald-400 border border-emerald-900">Brand New</span>`;
                 else if (tire.status === "Warehouse Spare") statusBadge = `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-blue-950 text-blue-400 border border-blue-900">Spare</span>`;
                 else if (tire.status === "For Repair") statusBadge = `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-950 text-amber-500 border border-amber-900">For Repair</span>`;
@@ -612,7 +629,7 @@
                 box.innerHTML = list.map(t => `
                     <div class="p-2 bg-gray-950 rounded border border-gray-800 flex justify-between items-center hover:border-gray-700 transition">
                         <span class="font-mono text-amber-500 font-bold">${t.id}</span>
-                        <span class="bg-blue-950/60 px-2 py-0.5 text-blue-400 rounded font-bold border border-blue-900/50">${t.status}</span>
+                        <span class="bg-purple-950/60 px-2 py-0.5 text-purple-400 rounded font-bold border border-purple-900/50">${t.status}</span>
                     </div>
                 `).join('');
             };
