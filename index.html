@@ -395,23 +395,11 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
 
         let mockDatabase = [];
-        let mockFleetDatabase = [
-            { equipment_number: "BH-199", brand: "CATERPILLAR", model: "M315GC" },
-            { equipment_number: "RR-93", brand: "CATERPILLAR", model: "CS10GC" },
-            { equipment_number: "BH-198", brand: "CATERPILLAR", model: "M315G" },
-            { equipment_number: "VH-03", brand: "CATERPILLAR", model: "0" },
-            { equipment_number: "DOLLY-01", brand: "CHANG GONG", model: "ZS1115 NM" },
-            { equipment_number: "DOLLY-02", brand: "CHANG GONG", model: "ZS1115 NM" },
-            { equipment_number: "SVCSG 07", brand: "CHEVROLET", model: "CORVETTE" },
-            { equipment_number: "SV 108", brand: "CHEVROLET", model: "SPARK" }
-        ];
-
         let activeTab = 'inventory';
         let currentGroupFilter = 'ALL';
         let currentStatusFilter = 'ALL';
         let currentUpdateSerialTarget = null;
         let globalCachedTires = []; 
-        let globalCachedFleet = [];
         let supabaseClient = null;
         let isSupabaseConfigured = false;
         let currentIntakeCount = 1;
@@ -439,7 +427,7 @@
         function bootstrapMockDatabase() {
             const groups = ["OTR", "TBR", "SV"];
             const brands = ["Michelin", "Bridgestone", "Goodyear", "Continental"];
-            const statusPool = ["Brand New", "Warehouse Spare", "For Repair"];
+            const statusPool = ["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"];
             const specs = {
                 "OTR": { size: "45/65R45", pattern: "A4", ply: "58PR", orig: 28.0, type: "Tubeless" },
                 "TBR": { size: "295/80R22.5", pattern: "PW825+", ply: "16PR", orig: 24.0, type: "Tubeless" },
@@ -456,11 +444,9 @@
 
                 if (currentStatus === "Brand New") remTread = spec.orig;
 
-                // Occassionally mount some mock tires directly onto our layout chassis array elements
-                if (Math.random() > 0.40) {
-                    if (group === "OTR") currentStatus = i % 2 === 0 ? "BH-199" : "RR-93";
-                    else if (group === "TBR") currentStatus = "DOLLY-01";
-                    else currentStatus = "SV 108";
+                if (Math.random() > 0.45) {
+                    const prefix = group === "OTR" ? "HD-Truck" : (group === "TBR" ? "Logistics-T" : "Support-Van");
+                    currentStatus = `${prefix}0${Math.floor(1 + Math.random() * 5)}`;
                 }
 
                 mockDatabase.push({
@@ -498,25 +484,15 @@
                 if(text) { text.innerText = "Live Database"; text.className = "text-[9px] font-mono uppercase tracking-wider text-emerald-400"; }
                 
                 try {
-                    // Fetch Tires
-                    let { data: tiresData, error: tiresErr } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
-                    if (tiresErr) throw tiresErr;
-                    globalCachedTires = tiresData || [];
-
-                    // Fetch Fleet Equipment Profiles
-                    let { data: fleetData, error: fleetErr } = await supabaseClient.from('fleet').select('*');
-                    if (fleetErr) throw fleetErr;
-                    globalCachedFleet = fleetData || [];
-                } catch (e) { 
-                    globalCachedTires = [...mockDatabase]; 
-                    globalCachedFleet = [...mockFleetDatabase];
-                }
+                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
+                    if (error) throw error;
+                    globalCachedTires = data || [];
+                } catch (e) { globalCachedTires = [...mockDatabase]; }
             } else {
                 if(indicator) indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
                 if(dot) dot.className = "relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500";
                 if(text) { text.innerText = "Sandbox Mode"; text.className = "text-[9px] font-mono uppercase tracking-wider text-amber-400"; }
                 globalCachedTires = [...mockDatabase];
-                globalCachedFleet = [...mockFleetDatabase];
             }
             processAndRenderCanvasBoard();
         }
@@ -535,6 +511,7 @@
             } else {
                 intakePanel.classList.add('hidden');
                 fleetSidePanel.classList.remove('hidden');
+                // Return replacement module view safely back to normal step context on tab reset
                 document.getElementById('fleet-unselected-placeholder').classList.remove('hidden');
                 document.getElementById('replacement-ledger-zone').classList.add('hidden');
             }
@@ -578,7 +555,9 @@
             currentStatusFilter = 'ALL';
             currentPage = 1;
             
-            Object.keys(columnHeaderFilters).forEach(key => { columnHeaderFilters[key] = 'ALL'; });
+            Object.keys(columnHeaderFilters).forEach(key => {
+                columnHeaderFilters[key] = 'ALL';
+            });
 
             ['ALL', 'OTR', 'TBR', 'SV'].forEach(f => {
                 const btn = document.getElementById(`filter-btn-${f}`);
@@ -595,6 +574,7 @@
             });
 
             document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
+
             processAndRenderCanvasBoard();
         }
 
@@ -608,8 +588,10 @@
             const isAlreadyOpen = !currentMenu.classList.contains('hidden');
             
             document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
+            
             if (isAlreadyOpen) return;
 
+            // Gather values present based on Group + Status metrics filters
             let contextualData = globalCachedTires;
             if (currentGroupFilter !== 'ALL') contextualData = contextualData.filter(t => t.group === currentGroupFilter);
             if (currentStatusFilter !== 'ALL') {
@@ -645,14 +627,20 @@
 
         function processAndRenderCanvasBoard() {
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
+            let otrMap = {}, tbrMap = {}, svMap = {};
 
-            // Compute counts from technical tire assets list mapping
             globalCachedTires.forEach(t => {
                 if (t.status === "Brand New") brandNew++;
                 else if (t.status === "Warehouse Spare") spare++;
                 else if (t.status === "For Repair") repair++;
                 else if (t.status === "Scrapped Asset") scrap++;
-                if (isOperational(t.status)) operational++;
+                
+                if (isOperational(t.status)) {
+                    operational++;
+                    if (t.group === "OTR") { if(!otrMap[t.status]) otrMap[t.status] = []; otrMap[t.status].push(t); }
+                    else if (t.group === "TBR") { if(!tbrMap[t.status]) tbrMap[t.status] = []; tbrMap[t.status].push(t); }
+                    else { if(!svMap[t.status]) svMap[t.status] = []; svMap[t.status].push(t); }
+                }
             });
 
             document.getElementById('sq-brand-new').innerText = brandNew;
@@ -661,51 +649,22 @@
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
 
-            // Separate Fleet lists arrays based on prefixes 
-            let otrFleet = [];
-            let tbrFleet = [];
-            let svFleet = [];
+            document.getElementById('badge-otr-count').innerText = Object.keys(otrMap).length;
+            document.getElementById('badge-tbr-count').innerText = Object.keys(tbrMap).length;
+            document.getElementById('badge-sv-count').innerText = Object.keys(svMap).length;
 
-            globalCachedFleet.forEach(equip => {
-                const id = (equip.equipment_number || "").toUpperCase().trim();
-                
-                // Allocation conditions checking criteria 
-                if (id.startsWith("BH-") || id.startsWith("RR-") || id.startsWith("VH-")) {
-                    otrFleet.push(equip);
-                } else if (id.startsWith("DOLLY-")) {
-                    tbrFleet.push(equip);
-                } else if (id.startsWith("SVCSG") || id.startsWith("SV")) {
-                    svFleet.push(equip);
-                } else {
-                    svFleet.push(equip); // default fallback route channel
-                }
-            });
-
-            document.getElementById('badge-otr-count').innerText = otrFleet.length;
-            document.getElementById('badge-tbr-count').innerText = tbrFleet.length;
-            document.getElementById('badge-sv-count').innerText = svFleet.length;
-
-            const makeListHTML = (fleetArray, groupTag) => {
-                if(fleetArray.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-                return fleetArray.map(equip => {
-                    const mountedTires = globalCachedTires.filter(t => t.status === equip.equipment_number);
-                    const tireSizeText = mountedTires.length > 0 ? mountedTires[0].tire_size : 'Unspecified Spec';
-                    
-                    return `
-                        <div onclick="launchReplacementModule('${equip.equipment_number}', '${groupTag}', '${tireSizeText}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
-                            <div class="flex flex-col">
-                                <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equip.equipment_number}</span>
-                                <span class="text-[9px] text-gray-500 font-sans">${equip.brand || ''} ${equip.model || ''}</span>
-                            </div>
-                            <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${mountedTires.length} Pos</span>
-                        </div>
-                    `;
-                }).join('');
+            const makeListHTML = (map) => {
+                return Object.keys(map).map(chassis => `
+                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${chassis}</span>
+                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${map[chassis].length} Pos</span>
+                    </div>
+                `).join('');
             };
 
-            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(otrFleet, 'OTR');
-            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(tbrFleet, 'TBR');
-            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(svFleet, 'SV');
+            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(otrMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(tbrMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(svMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
 
             renderInventoryGridOnly();
             renderUtilityPanel();
@@ -724,10 +683,6 @@
             gridContainer.innerHTML = '';
 
             const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
-
-            if(boundTires.length === 0) {
-                gridContainer.innerHTML = `<div class="p-4 text-center text-gray-500 font-sans italic">No mounted tire items found currently linked to vehicle body record node. Fill via manual asset profile adjustments.</div>`;
-            }
 
             boundTires.forEach((tire, index) => {
                 const posId = index + 1;
@@ -1112,7 +1067,9 @@
             if (!currentUpdateSerialTarget) return;
             if (!isSupabaseConfigured) {
                 const target = mockDatabase.find(t => t.serial_number === currentUpdateSerialTarget);
-                if (target) { target.status = "Scrapped Asset"; }
+                if (target) {
+                    target.status = "Scrapped Asset";
+                }
                 closeUpdateModal();
                 syncEnginePipeline();
             } else {
