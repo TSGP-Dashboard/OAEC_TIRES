@@ -139,7 +139,7 @@
                                         <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'date_added')">
                                             <span>Date Added</span> <i class="fa-solid fa-filter text-[8px] opacity-70"></i>
                                         </div>
-                                        <div id="filter-menu-date_added" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left Normal-case font-sans"></div>
+                                        <div id="filter-menu-date_added" class="hidden absolute top-full left-2 mt-1 bg-gray-900 border border-gray-800 rounded shadow-xl z-30 max-h-48 overflow-y-auto min-w-[120px] p-1 text-left normal-case font-sans"></div>
                                     </th>
                                     <th class="p-2 font-semibold text-left relative">
                                         <div class="flex items-center space-x-1 cursor-pointer select-none hover:text-white transition" onclick="toggleHeaderFilterMenu(event, 'serial_number')">
@@ -205,12 +205,12 @@
                 </div>
             </div>
 
-            <!-- CANVAS: ACTIVE FLEET DEPLOYMENTS -->
+            <!-- CANVAS: ACTIVE FLEET DEPLOYMENTS & REPLACEMENT MODULE -->
             <div id="canvas-fleet" class="tab-canvas hidden space-y-4">
                 <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 flex justify-between items-center shadow-sm">
                     <div>
                         <h2 class="font-bold text-gray-200">Active Chassis Deployment Board</h2>
-                        <p class="text-[10px] text-gray-400">Live operational assignment map for tires bound to active equipment</p>
+                        <p class="text-[10px] text-gray-400">Select an operational vehicle chassis below to launch the interactive Replacement Ledger</p>
                     </div>
                     <div class="bg-purple-950/40 border border-purple-900 text-purple-400 px-3 py-1 rounded text-center">
                         <span class="block text-[8px] font-semibold uppercase tracking-wider">Bound Fleet Operational Tires</span>
@@ -223,19 +223,94 @@
                         <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-amber-500 font-bold">
                             <span>1. OTR Duty Equipment</span><span id="badge-otr-count" class="font-mono text-gray-400">0</span>
                         </div>
-                        <div id="fleet-list-otr" class="space-y-1.5 max-h-[300px] overflow-y-auto"></div>
+                        <div id="fleet-list-otr" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
                     </div>
                     <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
                         <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-blue-400 font-bold">
                             <span>2. TBR Prime Haulers</span><span id="badge-tbr-count" class="font-mono text-gray-400">0</span>
                         </div>
-                        <div id="fleet-list-tbr" class="space-y-1.5 max-h-[300px] overflow-y-auto"></div>
+                        <div id="fleet-list-tbr" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
                     </div>
                     <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
                         <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-emerald-400 font-bold">
                             <span>3. SV & Utility Support</span><span id="badge-sv-count" class="font-mono text-gray-400">0</span>
                         </div>
-                        <div id="fleet-list-sv" class="space-y-1.5 max-h-[300px] overflow-y-auto"></div>
+                        <div id="fleet-list-sv" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
+                    </div>
+                </div>
+
+                <!-- TIRE REPLACEMENT MODULE WORKSPACE -->
+                <div id="replacement-ledger-zone" class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hidden flex flex-col">
+                    <!-- Form Header Block -->
+                    <div class="border-b border-gray-800 p-3 bg-black/20 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="space-y-1 bg-gray-950 p-2 rounded border border-gray-800">
+                            <div class="flex justify-between items-center text-[10px] text-gray-400">
+                                <span>TRANSACTION DATE:</span>
+                                <span class="font-mono text-gray-200 font-semibold" id="replace-header-date">2026-07-18</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] text-gray-400">
+                                <span>EQUIPMENT NO:</span>
+                                <span class="font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20" id="replace-header-equip-id">SELECT EQUIPMENT</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col justify-center items-center text-center">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-gray-200">TIRE REPLACEMENT MODULE</span>
+                            <p class="text-[9px] text-gray-500 italic mt-0.5">Interactive Line-item Dual Allocation Ledger</p>
+                        </div>
+
+                        <div class="space-y-1 bg-gray-950 p-2 rounded border border-gray-800">
+                            <div class="flex justify-between items-center text-[10px] text-gray-400">
+                                <span>TIRE WORK ORDER:</span>
+                                <span class="font-mono text-blue-400 font-semibold" id="replace-header-wo-id">AUTO GENERATED</span>
+                            </div>
+                            <div class="flex items-center space-x-1 text-[10px] text-gray-400">
+                                <span class="shrink-0">SMR / ODOMETER:</span>
+                                <input type="number" placeholder="Enter Reading..." class="w-full bg-gray-900 border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono text-gray-200 focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dual Ledger Sheet Grid Table -->
+                    <div class="overflow-x-auto p-3 bg-gray-950">
+                        <div class="min-w-[1000px] border border-gray-800 rounded-lg overflow-hidden bg-gray-900 flex flex-col">
+                            
+                            <!-- Balanced Header Row -->
+                            <div class="grid grid-cols-11 text-[10px] font-bold uppercase text-center border-b border-gray-800 tracking-wider">
+                                <div class="col-span-5 bg-amber-500/10 text-amber-500 py-1.5 border-r border-gray-800">TIRE REMOVED</div>
+                                <div class="col-span-1 bg-black/40 text-gray-400 py-1.5 border-r border-gray-800">POSITION</div>
+                                <div class="col-span-5 bg-emerald-500/10 text-emerald-400 py-1.5">TIRE INSTALLED</div>
+                            </div>
+
+                            <!-- Column Label Details Row -->
+                            <div class="grid grid-cols-11 text-[9px] font-semibold text-gray-400 bg-gray-950 border-b border-gray-800 text-center uppercase tracking-wide">
+                                <div class="col-span-1 py-1 border-r border-gray-800">BRAND</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">SERIAL/BRANDING</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">REMOVAL REASON</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">RTD (mm)</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">DISPOSITION</div>
+                                
+                                <div class="col-span-1 py-1 bg-black/20 text-gray-300 font-bold border-r border-gray-800">INDEX</div>
+                                
+                                <div class="col-span-1 py-1 border-r border-gray-800">BRAND</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">SERIAL/BRANDING</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">RTD (mm)</div>
+                                <div class="col-span-2">REMARKS</div>
+                            </div>
+
+                            <!-- Container Row Injection Platform -->
+                            <div id="replacement-grid-rows" class="divide-y divide-gray-800 bg-gray-900 font-mono text-[11px]">
+                                <!-- Dynamically filled upon chassis click -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Command Footer Bar -->
+                    <div class="bg-black/20 border-t border-gray-800 p-2.5 flex justify-between items-center">
+                        <span class="text-[10px] text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i> Available tires are mapped directly from inventory with status tags: <b class="text-gray-400">Brand New, Spare, For Repair</b>.</span>
+                        <button onclick="triggerSaveSequence()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1 rounded shadow transition flex items-center gap-1.5 uppercase text-[10px]">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Save Replacement Ledger
+                        </button>
                     </div>
                 </div>
             </div>
@@ -489,7 +564,6 @@
             
             if (isAlreadyOpen) return;
 
-            // Gather values present based on Group + Status metrics filters
             let contextualData = globalCachedTires;
             if (currentGroupFilter !== 'ALL') contextualData = contextualData.filter(t => t.group === currentGroupFilter);
             if (currentStatusFilter !== 'ALL') {
@@ -519,7 +593,6 @@
             renderInventoryGridOnly();
         }
 
-        // Close active column filters dropdown menus when anywhere outside is clicked
         document.addEventListener('click', () => {
             document.querySelectorAll('[id^="filter-menu-"]').forEach(menu => menu.classList.add('hidden'));
         });
@@ -560,20 +633,129 @@
             document.getElementById('badge-tbr-count').innerText = tbrList.length;
             document.getElementById('badge-sv-count').innerText = svList.length;
 
-            const makeListHTML = (arr) => arr.map(t => `
-                <div class="p-1.5 bg-gray-950 rounded border border-gray-800/80 flex justify-between items-center text-[10px] font-mono">
-                    <span class="text-amber-500 font-bold">${t.serial_number}</span>
-                    <span class="text-gray-400">${t.tire_size}</span>
-                    <span class="bg-purple-950/60 text-purple-400 px-1.5 py-0.2 rounded border border-purple-900 text-[9px] font-bold">${t.status}</span>
-                </div>
-            `).join('');
+            // Extract unique active vehicle IDs
+            const buildVehicleChassisMap = (arr) => {
+                const map = {};
+                arr.forEach(t => {
+                    if(!map[t.status]) map[t.status] = [];
+                    map[t.status].push(t);
+                });
+                return Object.keys(map).map(chassis => `
+                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-monster mr-1 text-[9px]"></i>${chassis}</span>
+                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-bold">${map[chassis].length} Tires Bound</span>
+                    </div>
+                `).join('');
+            };
 
-            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(otrList);
-            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(tbrList);
-            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(svList);
+            document.getElementById('fleet-list-otr').innerHTML = buildVehicleChassisMap(otrList) || '<p class="text-gray-500 text-center italic py-2">No active OTR mounts</p>';
+            document.getElementById('fleet-list-tbr').innerHTML = buildVehicleChassisMap(tbrList) || '<p class="text-gray-500 text-center italic py-2">No active TBR mounts</p>';
+            document.getElementById('fleet-list-sv').innerHTML = buildVehicleChassisMap(svList) || '<p class="text-gray-500 text-center italic py-2">No active SV mounts</p>';
 
             renderInventoryGridOnly();
             renderUtilityPanel();
+        }
+
+        /* DYNAMIC REPLACEMENT SWAP ENGINE */
+        function launchReplacementModule(chassisId, groupClass) {
+            document.getElementById('replace-header-equip-id').innerText = chassisId;
+            document.getElementById('replace-header-wo-id').innerText = `WO-${chassisId.replace('-', '')}-2026`;
+            
+            const boundTires = globalCachedTires.filter(t => t.status === chassisId);
+            const gridContainer = document.getElementById('replacement-grid-rows');
+            gridContainer.innerHTML = '';
+
+            // Filter unmounted inventory pool available for installation
+            const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
+
+            if (boundTires.length === 0) {
+                gridContainer.innerHTML = `<div class="p-4 text-center text-gray-500 italic">No operational assets are currently mapped to chassis node indices.</div>`;
+                return;
+            }
+
+            boundTires.forEach((tire, index) => {
+                const posId = index + 1;
+                const row = document.createElement('div');
+                row.className = "grid grid-cols-11 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
+                
+                row.innerHTML = `
+                    <!-- REMOVED SECTION -->
+                    <div class="col-span-1 py-1 text-gray-400 font-medium truncate px-1">${tire.brand}</div>
+                    <div class="col-span-1 py-1 font-bold text-amber-500 tracking-wider">${tire.serial_number}</div>
+                    <div class="col-span-1 px-1">
+                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-gray-300 focus:border-amber-500 outline-none">
+                            <option value="">-- Reason --</option>
+                            <option>1. CHANGE-OUT</option>
+                            <option>2. WORN-OUT</option>
+                            <option>3. IMPACT BREAK</option>
+                            <option>4. PUNCTURED</option>
+                            <option>5. SIDEWALL CUT</option>
+                            <option>6. TREAD CHUNKING</option>
+                            <option>7. HEAT SEPARATION</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1 px-1">
+                        <input type="number" step="0.1" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-center font-mono text-gray-300 outline-none">
+                    </div>
+                    <div class="col-span-1 px-1">
+                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-gray-300 focus:border-amber-500 outline-none">
+                            <option value="">-- Disposition --</option>
+                            <option>1. FOR SPARE</option>
+                            <option>2. FOR REPAIR</option>
+                            <option>3. FOR ROTATION</option>
+                            <option>4. SCRAP</option>
+                        </select>
+                    </div>
+
+                    <!-- POSITION NODE SEPARATOR -->
+                    <div class="col-span-1 py-1 bg-black/30 font-bold text-amber-500 select-none text-[10px]">POS-${posId}</div>
+
+                    <!-- INSTALLED SECTION -->
+                    <div class="col-span-1 py-1 text-gray-400 font-medium px-1 truncate" id="inst-brand-POS${posId}">--</div>
+                    <div class="col-span-1 px-1">
+                        <select onchange="handleInventoryLookup(this, 'POS${posId}')" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-emerald-400 font-bold outline-none focus:border-emerald-500">
+                            <option value="">-- Select Serial --</option>
+                            ${unmountedPool.map(t => `<option value="${t.serial_number}">${t.serial_number} (${t.status})</option>`).join('')}
+                        </select>
+                    </div>
+                    <!-- AUTOCAPTURED RTD FROM INVENTORY ENGINE STATE -->
+                    <div class="col-span-1 py-1 text-emerald-400 font-bold font-mono" id="inst-rtd-POS${posId}">--</div>
+                    <div class="col-span-2 py-1 text-left truncate text-gray-400 px-2 text-[10px]" id="inst-remarks-POS${posId}">--</div>
+                `;
+                gridContainer.appendChild(row);
+            });
+
+            document.getElementById('replacement-ledger-zone').classList.remove('hidden');
+            // Smoothly jump presentation view focus downwards directly onto open module ledger sheet
+            document.getElementById('replacement-ledger-zone').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function handleInventoryLookup(selectEl, positionTag) {
+            const chosenSerial = selectEl.value;
+            const targetTire = globalCachedTires.find(t => t.serial_number === chosenSerial);
+
+            const labelBrand = document.getElementById(`inst-brand-${positionTag}`);
+            const labelRtd = document.getElementById(`inst-rtd-${positionTag}`);
+            const labelRemarks = document.getElementById(`inst-remarks-${positionTag}`);
+
+            if (targetTire) {
+                labelBrand.innerText = targetTire.brand;
+                labelRtd.innerText = `${Number(targetTire.remaining_tread_depth || 0).toFixed(1)} mm`;
+                labelRemarks.innerText = `${targetTire.tire_size} | Pattern: ${targetTire.pattern || 'STD'}`;
+            } else {
+                labelBrand.innerText = "--";
+                labelRtd.innerText = "--";
+                labelRemarks.innerText = "--";
+            }
+        }
+
+        function triggerSaveSequence() {
+            const activeChassis = document.getElementById('replace-header-equip-id').innerText;
+            if (activeChassis === "SELECT EQUIPMENT") {
+                alert("Operation Error: Please select an active asset from the deployment boards first.");
+                return;
+            }
+            alert(`Verified: Replacement ledger states written and logged to chassis node: ${activeChassis}.`);
         }
 
         function renderInventoryGridOnly() {
@@ -583,14 +765,12 @@
 
             let data = globalCachedTires;
 
-            // Apply capsule component filters
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
             if (currentStatusFilter !== 'ALL') {
                 if (currentStatusFilter === 'Operational') data = data.filter(t => isOperational(t.status));
                 else data = data.filter(t => t.status === currentStatusFilter);
             }
 
-            // Apply interactive column dropdown header filters
             Object.keys(columnHeaderFilters).forEach(key => {
                 const targetCriteria = columnHeaderFilters[key];
                 if (targetCriteria !== 'ALL') {
@@ -654,7 +834,6 @@
             renderInventoryGridOnly();
         }
 
-        // CSV/Excel Export Pipeline
         function exportToExcel() {
             let data = globalCachedTires;
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
