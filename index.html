@@ -824,10 +824,24 @@
                     const newDisp = document.getElementById(`rem-disp-POS${posId}`).value || "Warehouse Spare";
 
                     if(removedTire && installedTire) {
-                        // Apply status updates to mock db or target cloud mappings
-                        removedTire.status = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
+                        // Apply status updates to mock db or target cloud mappings[cite: 3]
+                        let targetStatus = "Warehouse Spare";
+                        if (newDisp === "SCRAP") targetStatus = "Scrapped Asset";
+                        else if (newDisp === "FOR REPAIR") targetStatus = "For Repair";
+
+                        removedTire.status = targetStatus;
                         removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
+                        
+                        // Execute mapping to the machine
                         installedTire.status = equipId;
+
+                        // Post changes back to Supabase if config is initialized
+                        if (isSupabaseConfigured) {
+                            try {
+                                await supabaseClient.from('tires').update({ status: targetStatus, remaining_tread_depth: removedTire.remaining_tread_depth }).eq('serial_number', removedTire.serial_number);
+                                await supabaseClient.from('tires').update({ status: equipId }).eq('serial_number', installedTire.serial_number);
+                            } catch (err) { console.error("Cloud mutation failed", err); }
+                        }
                     }
                 }
             }
