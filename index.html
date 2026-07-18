@@ -102,20 +102,27 @@
                     <button onclick="setGroupFilter('SV')" id="filter-btn-SV" class="px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 bg-gray-800 hover:text-gray-200 transition">Support Vehicle (SV)</button>
                 </div>
 
-                <!-- Technical Registry Table -->
-                <div class="bg-gray-900 border border-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <!-- Technical Registry Table Container -->
+                <div class="bg-gray-900 border border-gray-800 rounded-lg shadow-sm overflow-hidden flex flex-col justify-between">
                     <div class="px-3 py-2 bg-gray-900/60 border-b border-gray-800 flex justify-between items-center">
                         <div class="flex items-center space-x-1.5">
                             <i class="fa-solid fa-table-list text-amber-500"></i>
                             <h2 class="font-bold text-gray-200 text-xs">Live Technical Inventory Asset Registry</h2>
                         </div>
-                        <span id="inventory-counter-badge" class="bg-black/40 text-gray-400 text-[10px] px-2 py-0.5 rounded border border-gray-800 font-mono">0 Items Found</span>
+                        <div class="flex items-center space-x-2">
+                            <!-- EXPORT EXCEL BUTTON -->
+                            <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition shadow border border-emerald-600/30">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Export Excel</span>
+                            </button>
+                            <span id="inventory-counter-badge" class="bg-black/40 text-gray-400 text-[10px] px-2 py-1 rounded border border-gray-800 font-mono">0 Items Found</span>
+                        </div>
                     </div>
                     
-                    <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+                    <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-black/20 text-gray-400 text-[10px] tracking-wider uppercase border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
-                                <tr class="divide-x divide-gray-800/40">
+                            <thead>
+                                <tr class="bg-black/20 text-gray-400 text-[10px] tracking-wider uppercase border-b border-gray-800 bg-gray-900">
                                     <th class="p-2 pl-3 font-semibold text-left">Date Added</th>
                                     <th class="p-2 font-semibold text-left">Serial / Brand #</th>
                                     <th class="p-2 font-semibold text-left">Group</th>
@@ -124,7 +131,7 @@
                                     <th class="p-2 font-semibold text-left">Pattern</th>
                                     <th class="p-2 font-semibold text-left">Ply</th>
                                     <th class="p-2 font-semibold text-left">Type</th>
-                                    <th class="p-2 font-semibold text-left">OTD</th>
+                                    <th class="p-2 font-semibold text-left">RTD</th>
                                     <th class="p-2 font-semibold text-left">RTD</th>
                                     <th class="p-2 font-semibold text-left">Status</th>
                                     <th class="p-2 font-semibold text-center">Data Controls</th>
@@ -134,6 +141,19 @@
                                 <!-- Dynamic Injection -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- PAGINATION CONTROL BAR -->
+                    <div class="px-3 py-2 bg-black/20 border-t border-gray-800 flex justify-between items-center text-[11px]">
+                        <span id="pagination-info" class="text-gray-400 font-mono">Showing 0-0 of 0 items</span>
+                        <div class="flex items-center space-x-1 font-sans">
+                            <button onclick="changePage(-1)" id="btn-page-prev" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1 rounded border border-gray-700 disabled:opacity-40 disabled:hover:bg-gray-800 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-chevron-left text-[9px]"></i><span>Previous</span>
+                            </button>
+                            <button onclick="changePage(1)" id="btn-page-next" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1 rounded border border-gray-700 disabled:opacity-40 disabled:hover:bg-gray-800 transition flex items-center space-x-1">
+                                <span>Next</span><i class="fa-solid fa-chevron-right text-[9px]"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -235,15 +255,17 @@
         let globalCachedTires = []; 
         let supabaseClient = null;
         let isSupabaseConfigured = false;
-        let currentIntakeCount = 1; // Default row value
+        let currentIntakeCount = 1;
 
-        // Helper to format dynamic date strings
+        // Pagination State Variables
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 10;
+
         function getTodayDateString() {
             const d = new Date();
             return d.toISOString().split('T')[0];
         }
 
-        // Structured Database Bootstrapping covering traditional 12 columns
         function bootstrapMockDatabase() {
             const groups = ["OTR", "TBR", "SV"];
             const brands = ["Michelin", "Bridgestone", "Goodyear", "Continental"];
@@ -304,7 +326,7 @@
                 if(text) { text.innerText = "Live Database"; text.className = "text-[9px] font-mono uppercase tracking-wider text-emerald-400"; }
                 
                 try {
-                    let { data, error } = await supabaseClient.from('tires').select('*');
+                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
                     if (error) throw error;
                     globalCachedTires = data || [];
                 } catch (e) { globalCachedTires = [...mockDatabase]; }
@@ -332,6 +354,7 @@
 
         function setGroupFilter(groupId) {
             currentGroupFilter = groupId;
+            currentPage = 1; // Reset to page 1 on search change
             ['ALL', 'OTR', 'TBR', 'SV'].forEach(f => {
                 const btn = document.getElementById(`filter-btn-${f}`);
                 if (f === groupId) btn.className = "px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-gray-950 transition";
@@ -342,6 +365,7 @@
 
         function setStatusFilter(statusId) {
             currentStatusFilter = currentStatusFilter === statusId ? 'ALL' : statusId;
+            currentPage = 1; // Reset to page 1
             const cardMap = {
                 'Brand New': 'card-Brand-New', 'Warehouse Spare': 'card-Warehouse-Spare',
                 'Operational': 'card-Operational', 'For Repair': 'card-For-Repair', 'Scrapped Asset': 'card-Scrapped-Asset'
@@ -416,9 +440,29 @@
                 else data = data.filter(t => t.status === currentStatusFilter);
             }
 
-            document.getElementById('inventory-counter-badge').innerText = `${data.length} Items Listed`;
+            const totalItems = data.length;
+            document.getElementById('inventory-counter-badge').innerText = `${totalItems} Items Listed`;
 
-            data.forEach(t => {
+            // Calculate Pagination Splice Range
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+            
+            const paginatedData = data.slice(startIndex, endIndex);
+
+            // Update bottom navigation bar controls text & flags
+            document.getElementById('pagination-info').innerText = `Showing ${totalItems === 0 ? 0 : startIndex + 1}-${endIndex} of ${totalItems} items`;
+            document.getElementById('btn-page-prev').disabled = (currentPage === 1);
+            document.getElementById('btn-page-next').disabled = (currentPage === totalPages || totalItems === 0);
+
+            if (paginatedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-gray-500 font-sans">No matching tire equipment data profiles located inside active search scope bounds.</td></tr>`;
+                return;
+            }
+
+            paginatedData.forEach(t => {
                 let badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-purple-950 text-purple-400 border border-purple-900/60">${t.status}</span>`;
                 if (t.status === "Brand New") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-emerald-950 text-emerald-400 border border-emerald-900/60">Brand New</span>`;
                 else if (t.status === "Warehouse Spare") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-blue-950 text-blue-400 border border-blue-900/60">Spare</span>`;
@@ -428,17 +472,17 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/40 border-b border-gray-800/60 transition";
                 tr.innerHTML = `
-                    <td class="p-2 text-gray-400 border-r border-gray-800/40">${t.date_added || 'N/A'}</td>
-                    <td class="p-2 font-bold text-amber-500 border-r border-gray-800/40">${t.serial_number}</td>
-                    <td class="p-2 text-gray-400 border-r border-gray-800/40">${t.group}</td>
-                    <td class="p-2 text-gray-300 border-r border-gray-800/40">${t.tire_size}</td>
-                    <td class="p-2 text-gray-400 border-r border-gray-800/40">${t.brand}</td>
-                    <td class="p-2 text-gray-300 border-r border-gray-800/40">${t.pattern}</td>
-                    <td class="p-2 text-gray-500 border-r border-gray-800/40">${t.ply_rating}</td>
-                    <td class="p-2 text-gray-400 border-r border-gray-800/40">${t.type}</td>
-                    <td class="p-2 text-gray-400 border-r border-gray-800/40">${Number(t.original_tread_depth).toFixed(1)}</td>
-                    <td class="p-2 text-gray-200 font-semibold border-r border-gray-800/40">${Number(t.remaining_tread_depth).toFixed(1)}</td>
-                    <td class="p-2 border-r border-gray-800/40">${badge}</td>
+                    <td class="p-2 pl-3 text-gray-400 text-left">${t.date_added || 'N/A'}</td>
+                    <td class="p-2 font-bold text-amber-500 text-left">${t.serial_number}</td>
+                    <td class="p-2 text-gray-400 text-left">${t.group}</td>
+                    <td class="p-2 text-gray-300 text-left">${t.tire_size}</td>
+                    <td class="p-2 text-gray-400 text-left">${t.brand}</td>
+                    <td class="p-2 text-gray-300 text-left">${t.pattern || 'Standard'}</td>
+                    <td class="p-2 text-gray-500 text-left">${t.ply_rating}</td>
+                    <td class="p-2 text-gray-400 text-left">${t.type}</td>
+                    <td class="p-2 text-gray-400 text-left">${Number(t.original_tread_depth).toFixed(1)}</td>
+                    <td class="p-2 text-gray-200 font-semibold text-left">${Number(t.remaining_tread_depth).toFixed(1)}</td>
+                    <td class="p-2 text-left">${badge}</td>
                     <td class="p-1 text-center">
                         <button onclick="openUpdateModal('${t.serial_number}')" class="bg-gray-800 hover:bg-amber-600 text-gray-300 hover:text-gray-950 px-2 py-0.5 rounded border border-gray-700 hover:border-amber-600 transition text-[10px] font-sans font-medium">
                             <i class="fa-solid fa-sliders mr-1"></i>Edit
@@ -449,7 +493,60 @@
             });
         }
 
-        // Render Panel dynamically with multiple dynamic row generation support
+        function changePage(direction) {
+            currentPage += direction;
+            renderInventoryGridOnly();
+        }
+
+        // CSV Engine for spreadsheet outputs matching current visible filters
+        function exportToExcel() {
+            let data = globalCachedTires;
+            if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
+            if (currentStatusFilter !== 'ALL') {
+                if (currentStatusFilter === 'Operational') data = data.filter(t => isOperational(t.status));
+                else data = data.filter(t => t.status === currentStatusFilter);
+            }
+
+            if (data.length === 0) {
+                alert("The active filter scope view contains zero assets. Transfer execution canceled.");
+                return;
+            }
+
+            // CSV Structural Header Mapping Line
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date Added,Serial Number,Group,Size Spec,Make Brand,Pattern,Ply Rating,Type,Original RTD,Remaining RTD,Status\n";
+
+            // Parse objects safely escape potential syntax issues
+            data.forEach(t => {
+                let row = [
+                    t.date_added || '',
+                    `"${t.serial_number}"`,
+                    t.group,
+                    `"${t.tire_size}"`,
+                    `"${t.brand}"`,
+                    `"${t.pattern || 'Standard'}"`,
+                    t.ply_rating,
+                    t.type,
+                    Number(t.original_tread_depth).toFixed(1),
+                    Number(t.remaining_tread_depth).toFixed(1),
+                    `"${t.status}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            // Trigger system download bridge link
+            const encodedUri = encodeURI(csvContent);
+            const downloadAnchor = document.createElement("a");
+            downloadAnchor.setAttribute("href", encodedUri);
+            
+            const timestamp = new Date().toISOString().slice(0,10);
+            downloadAnchor.setAttribute("download", `TyreTrack_Export_${currentGroupFilter}__${timestamp}.csv`);
+            document.body.appendChild(downloadAnchor);
+            
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+        }
+
         function renderUtilityPanel() {
             const side = document.getElementById('utility-panel');
             side.innerHTML = `
@@ -472,7 +569,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-gray-400 mb-0.5">Tire Construction Type</label>
+                                <label class="block text-gray-400 mb-0.5">Tire Type</label>
                                 <select id="add-type" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                                     <option value="Tubeless">Tubeless</option><option value="Tube Type">Tube Type</option>
                                 </select>
@@ -503,17 +600,15 @@
                             </div>
                         </div>
                         
-                        <!-- New Date Added Field -->
                         <div>
                             <label class="block text-amber-500 font-bold text-[10px] uppercase mb-0.5">Date Added</label>
                             <input type="date" id="add-date" value="${getTodayDateString()}" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono focus:outline-none">
                         </div>
 
-                        <!-- Dynamic Serial Code Fields Wrapper -->
                         <div class="border-t border-gray-800/80 pt-2 mt-2">
                             <label class="block text-gray-400 font-semibold text-[10px] mb-1 uppercase tracking-wider">Serial Number / Branding Number</label>
                             <div id="serial-inputs-container" class="space-y-1 max-h-[160px] overflow-y-auto pr-1">
-                                <!-- Generated Dynamic Row Blocks Injection -->
+                                <!-- Dynamic Rows Injected -->
                             </div>
                         </div>
 
@@ -526,17 +621,15 @@
             updateSerialRows(currentIntakeCount);
         }
 
-        // Dynamically creates text rows depending on the value of the "Total Tires for Entry" input field
         function updateSerialRows(countValue) {
             let total = parseInt(countValue) || 1;
             if (total < 1) total = 1;
-            if (total > 30) total = 30; // Safety threshold UI limit
+            if (total > 30) total = 30;
             currentIntakeCount = total;
 
             const container = document.getElementById('serial-inputs-container');
             if(!container) return;
 
-            // Retain values already written by users while increasing/decreasing rows
             const existingValues = [];
             container.querySelectorAll('input').forEach(inp => existingValues.push(inp.value));
 
@@ -553,7 +646,6 @@
             }
         }
 
-        // --- MANIPULATION PROCEDURES & DIALOG CONTEXT ENGINE ---
         function openUpdateModal(serial) {
             currentUpdateSerialTarget = serial;
             const item = globalCachedTires.find(t => t.serial_number === serial);
@@ -644,7 +736,6 @@
             }
         }
 
-        // Batch parsing logic mapping to multiple rows
         async function executeBatchSave() {
             const group = document.getElementById('add-group').value;
             const type = document.getElementById('add-type').value;
@@ -657,7 +748,6 @@
 
             if (!size || !brand) return alert("Shared context payload parameters (Size & Brand Make) are strictly required.");
 
-            // Collect all unique serial inputs
             const inputs = document.querySelectorAll('.batch-serial-field');
             const records = [];
             
@@ -674,17 +764,18 @@
             }
 
             if (!isSupabaseConfigured) {
-                // Bulk inject sandbox data
-                records.forEach(r => mockDatabase.push(r));
+                records.forEach(r => mockDatabase.unshift(r)); // Place new data at beginning
                 alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
                 currentIntakeCount = 1; 
+                currentPage = 1;
                 syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires').insert(records);
                     if (error) throw error;
-                    alert(`Successfully submitted batch array payload payload containing ${records.length} tires to Supabase.`);
+                    alert(`Successfully submitted batch array payload containing ${records.length} tires to Supabase.`);
                     currentIntakeCount = 1;
+                    currentPage = 1;
                     syncEnginePipeline();
                 } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
             }
