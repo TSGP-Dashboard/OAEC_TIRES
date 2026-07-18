@@ -131,7 +131,7 @@
                                     <th class="p-2 font-semibold text-left">Pattern</th>
                                     <th class="p-2 font-semibold text-left">Ply</th>
                                     <th class="p-2 font-semibold text-left">Type</th>
-                                    <th class="p-2 font-semibold text-left">RTD</th>
+                                    <th class="p-2 font-semibold text-left">OTD</th>
                                     <th class="p-2 font-semibold text-left">RTD</th>
                                     <th class="p-2 font-semibold text-left">Status</th>
                                     <th class="p-2 font-semibold text-center">Data Controls</th>
@@ -354,13 +354,13 @@
 
         function setGroupFilter(groupId) {
             currentGroupFilter = groupId;
-            currentPage = 1; // Reset to page 1 on search change
+            currentPage = 1; // Reset to page 1 on filter modification
             ['ALL', 'OTR', 'TBR', 'SV'].forEach(f => {
                 const btn = document.getElementById(`filter-btn-${f}`);
                 if (f === groupId) btn.className = "px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-gray-950 transition";
                 else btn.className = "px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 bg-gray-800 hover:text-gray-200 transition";
             });
-            renderInventoryGridOnly();
+            processAndRenderCanvasBoard(); // Recalculate metrics based on group
         }
 
         function setStatusFilter(statusId) {
@@ -386,13 +386,8 @@
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
             let otrList = [], tbrList = [], svList = [];
 
+            // 1. Calculate active fleet lists globally first (always maps complete scope)
             globalCachedTires.forEach(t => {
-                if (t.status === "Brand New") brandNew++;
-                else if (t.status === "Warehouse Spare") spare++;
-                else if (t.status === "For Repair") repair++;
-                else if (t.status === "Scrapped Asset") scrap++;
-                else if (isOperational(t.status)) operational++;
-
                 if (isOperational(t.status)) {
                     if (t.group === "OTR") otrList.push(t);
                     else if (t.group === "TBR") tbrList.push(t);
@@ -400,13 +395,30 @@
                 }
             });
 
+            // 2. Filter dataset metrics context dynamically by current Group Class selection
+            let metricsData = globalCachedTires;
+            if (currentGroupFilter !== 'ALL') {
+                metricsData = globalCachedTires.filter(t => t.group === currentGroupFilter);
+            }
+
+            // 3. Increment counters strictly within selected group view
+            metricsData.forEach(t => {
+                if (t.status === "Brand New") brandNew++;
+                else if (t.status === "Warehouse Spare") spare++;
+                else if (t.status === "For Repair") repair++;
+                else if (t.status === "Scrapped Asset") scrap++;
+                else if (isOperational(t.status)) operational++;
+            });
+
+            // 4. Update the dashboard status cards
             document.getElementById('sq-brand-new').innerText = brandNew;
             document.getElementById('sq-total-spares').innerText = spare;
             document.getElementById('sq-operational').innerText = operational;
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
-            document.getElementById('metric-active-fleet').innerText = operational;
-
+            
+            // Total assignments card remains absolute to standard deployment matrix
+            document.getElementById('metric-active-fleet').innerText = globalCachedTires.filter(t => isOperational(t.status)).length;
             document.getElementById('badge-otr-count').innerText = otrList.length;
             document.getElementById('badge-tbr-count').innerText = tbrList.length;
             document.getElementById('badge-sv-count').innerText = svList.length;
@@ -443,7 +455,7 @@
             const totalItems = data.length;
             document.getElementById('inventory-counter-badge').innerText = `${totalItems} Items Listed`;
 
-            // Calculate Pagination Splice Range
+            // Calculate pagination splits
             const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             
@@ -452,7 +464,7 @@
             
             const paginatedData = data.slice(startIndex, endIndex);
 
-            // Update bottom navigation bar controls text & flags
+            // Sync structural info bar navigation details
             document.getElementById('pagination-info').innerText = `Showing ${totalItems === 0 ? 0 : startIndex + 1}-${endIndex} of ${totalItems} items`;
             document.getElementById('btn-page-prev').disabled = (currentPage === 1);
             document.getElementById('btn-page-next').disabled = (currentPage === totalPages || totalItems === 0);
@@ -478,10 +490,10 @@
                     <td class="p-2 text-gray-300 text-left">${t.tire_size}</td>
                     <td class="p-2 text-gray-400 text-left">${t.brand}</td>
                     <td class="p-2 text-gray-300 text-left">${t.pattern || 'Standard'}</td>
-                    <td class="p-2 text-gray-500 text-left">${t.ply_rating}</td>
+                    <td class="p-2 text-gray-500 text-left">${t.ply_rating || 'N/A'}</td>
                     <td class="p-2 text-gray-400 text-left">${t.type}</td>
-                    <td class="p-2 text-gray-400 text-left">${Number(t.original_tread_depth).toFixed(1)}</td>
-                    <td class="p-2 text-gray-200 font-semibold text-left">${Number(t.remaining_tread_depth).toFixed(1)}</td>
+                    <td class="p-2 text-gray-400 text-left">${Number(t.original_tread_depth || 0).toFixed(1)}</td>
+                    <td class="p-2 text-gray-200 font-semibold text-left">${Number(t.remaining_tread_depth || 0).toFixed(1)}</td>
                     <td class="p-2 text-left">${badge}</td>
                     <td class="p-1 text-center">
                         <button onclick="openUpdateModal('${t.serial_number}')" class="bg-gray-800 hover:bg-amber-600 text-gray-300 hover:text-gray-950 px-2 py-0.5 rounded border border-gray-700 hover:border-amber-600 transition text-[10px] font-sans font-medium">
@@ -498,7 +510,7 @@
             renderInventoryGridOnly();
         }
 
-        // CSV Engine for spreadsheet outputs matching current visible filters
+        // CSV Engine for generation of valid Excel readable data formats
         function exportToExcel() {
             let data = globalCachedTires;
             if (currentGroupFilter !== 'ALL') data = data.filter(t => t.group === currentGroupFilter);
@@ -512,11 +524,9 @@
                 return;
             }
 
-            // CSV Structural Header Mapping Line
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += "Date Added,Serial Number,Group,Size Spec,Make Brand,Pattern,Ply Rating,Type,Original RTD,Remaining RTD,Status\n";
 
-            // Parse objects safely escape potential syntax issues
             data.forEach(t => {
                 let row = [
                     t.date_added || '',
@@ -525,16 +535,15 @@
                     `"${t.tire_size}"`,
                     `"${t.brand}"`,
                     `"${t.pattern || 'Standard'}"`,
-                    t.ply_rating,
+                    t.ply_rating || '',
                     t.type,
-                    Number(t.original_tread_depth).toFixed(1),
-                    Number(t.remaining_tread_depth).toFixed(1),
+                    Number(t.original_tread_depth || 0).toFixed(1),
+                    Number(t.remaining_tread_depth || 0).toFixed(1),
                     `"${t.status}"`
                 ].join(",");
                 csvContent += row + "\n";
             });
 
-            // Trigger system download bridge link
             const encodedUri = encodeURI(csvContent);
             const downloadAnchor = document.createElement("a");
             downloadAnchor.setAttribute("href", encodedUri);
@@ -764,7 +773,7 @@
             }
 
             if (!isSupabaseConfigured) {
-                records.forEach(r => mockDatabase.unshift(r)); // Place new data at beginning
+                records.forEach(r => mockDatabase.unshift(r)); 
                 alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
                 currentIntakeCount = 1; 
                 currentPage = 1;
