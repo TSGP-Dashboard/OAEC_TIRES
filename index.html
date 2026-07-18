@@ -452,6 +452,7 @@
                             date_added: getTodayDateString(),
                             serial_number: `TR-${Math.floor(21000 + Math.random() * 68000)}`,
                             group: grp,
+                            category: grp === "OTR" ? "heavy" : (grp === "TBR" ? "logistics" : "support"),
                             tire_size: spec.size,
                             brand: brands[Math.floor(Math.random() * brands.length)],
                             pattern: spec.pattern,
@@ -479,6 +480,7 @@
                     date_added: getTodayDateString(),
                     serial_number: `TR-${Math.floor(21000 + Math.random() * 68000)}`,
                     group: group,
+                    category: group === "OTR" ? "heavy" : (group === "TBR" ? "logistics" : "support"),
                     tire_size: spec.size,
                     brand: brand,
                     pattern: spec.pattern,
@@ -661,9 +663,23 @@
                 
                 if (isOperational(t.status)) {
                     operational++;
-                    if (t.group === "OTR") { if(!OTRMap[t.status]) OTRMap[t.status] = []; OTRMap[t.status].push(t); }
-                    else if (t.group === "TBR") { if(!TBRMap[t.status]) TBRMap[t.status] = []; TBRMap[t.status].push(t); }
-                    else { if(!SVMap[t.status]) SVMap[t.status] = []; SVMap[t.status].push(t); }
+                    
+                    // Case-insensitive database check for mapping the fleet lists cleanly
+                    const normalizedCategory = String(t.category || '').toLowerCase();
+                    const groupClass = t.group || '';
+
+                    if (groupClass === "OTR" || normalizedCategory === "heavy") { 
+                        if(!OTRMap[t.status]) OTRMap[t.status] = []; 
+                        OTRMap[t.status].push(t); 
+                    }
+                    else if (groupClass === "TBR" || normalizedCategory === "logistics") { 
+                        if(!TBRMap[t.status]) TBRMap[t.status] = []; 
+                        TBRMap[t.status].push(t); 
+                    }
+                    else { 
+                        if(!SVMap[t.status]) SVMap[t.status] = []; 
+                        SVMap[t.status].push(t); 
+                    }
                 }
             });
 
@@ -1174,9 +1190,18 @@
                     return alert(`Validation Error: Serial value field row #${i+1} is completely blank.`);
                 }
                 records.push({
-                    date_added: dateAdded, serial_number: serialVal, group: group, tire_size: size, brand: brand,
-                    pattern: pattern, ply_rating: ply, type: type,
-                    original_tread_depth: orig, remaining_tread_depth: orig, status: "Brand New"
+                    date_added: dateAdded, 
+                    serial_number: serialVal, 
+                    group: group, 
+                    category: group === "OTR" ? "heavy" : (group === "TBR" ? "logistics" : "support"),
+                    tire_size: size, 
+                    brand: brand,
+                    pattern: pattern, 
+                    ply_rating: ply, 
+                    type: type,
+                    original_tread_depth: orig, 
+                    remaining_tread_depth: orig, 
+                    status: "Brand New"
                 });
             }
 
