@@ -53,7 +53,7 @@
     <!-- Master Grid -->
     <main class="container mx-auto px-2 mt-3 grid grid-cols-1 lg:grid-cols-15 gap-4">
         
-        <!-- Navigation & Dynamic Intake Panel (20%) -->
+        <!-- Navigation & Left Dynamic Context Panels (20%) -->
         <div class="lg:col-span-3 space-y-3">
             <nav class="bg-gray-900 border border-gray-800 rounded-lg p-1.5 space-y-0.5">
                 <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 bg-amber-600 text-white">
@@ -64,13 +64,40 @@
                 </button>
             </nav>
 
-            <!-- Dynamic Batch Intake Panel -->
+            <!-- Dynamic Batch Intake Panel (Only Visible in Inventory Mode) -->
             <div id="utility-panel" class="bg-gray-900 border border-gray-800 rounded-lg p-3">
                 <!-- Injected Dynamically via renderUtilityPanel() -->
             </div>
+
+            <!-- Fleet Group Lists Sidebar Panel (Only Visible in Fleet Mode) -->
+            <div id="fleet-side-panel" class="hidden space-y-3">
+                <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                    <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-amber-500 font-bold">
+                        <span><i class="fa-solid fa-hammer mr-1 text-[10px]"></i>OTR Heavy</span>
+                        <span id="badge-otr-count" class="font-mono text-gray-500 text-[10px]">0</span>
+                    </div>
+                    <div id="fleet-list-otr" class="space-y-1.5 max-h-[140px] overflow-y-auto"></div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                    <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-blue-400 font-bold">
+                        <span><i class="fa-solid fa-truck-moving mr-1 text-[10px]"></i>TBR Logistics</span>
+                        <span id="badge-tbr-count" class="font-mono text-gray-500 text-[10px]">0</span>
+                    </div>
+                    <div id="fleet-list-tbr" class="space-y-1.5 max-h-[140px] overflow-y-auto"></div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
+                    <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-emerald-400 font-bold">
+                        <span><i class="fa-solid fa-car-side mr-1 text-[10px]"></i>SV Support</span>
+                        <span id="badge-sv-count" class="font-mono text-gray-500 text-[10px]">0</span>
+                    </div>
+                    <div id="fleet-list-sv" class="space-y-1.5 max-h-[140px] overflow-y-auto"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Main Workspace (80%) -->
+        <!-- Main Workspace Canvas Area (80%) -->
         <div class="lg:col-span-12 space-y-4">
             
             <!-- CANVAS: INVENTORY -->
@@ -205,111 +232,97 @@
                 </div>
             </div>
 
-            <!-- CANVAS: ACTIVE FLEET DEPLOYMENTS & REPLACEMENT MODULE -->
+            <!-- CANVAS: ACTIVE FLEET DEPLOYMENTS & LIVE LEDGER WORKSHEET -->
             <div id="canvas-fleet" class="tab-canvas hidden space-y-4">
-                <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 flex justify-between items-center shadow-sm">
-                    <div>
-                        <h2 class="font-bold text-gray-200">Active Chassis Deployment Board</h2>
-                        <p class="text-[10px] text-gray-400">Select an operational vehicle chassis below to launch the interactive Replacement Ledger</p>
+                
+                <!-- Welcome/Unselected Structural Standby Placeholder Layer -->
+                <div id="fleet-unselected-placeholder" class="bg-gray-900 border border-gray-800 rounded-lg p-8 text-center space-y-3 shadow-md">
+                    <div class="inline-flex p-4 rounded-full bg-amber-500/10 text-amber-500 text-2xl animate-pulse">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
                     </div>
-                    <div class="bg-purple-950/40 border border-purple-900 text-purple-400 px-3 py-1 rounded text-center">
-                        <span class="block text-[8px] font-semibold uppercase tracking-wider">Bound Fleet Operational Tires</span>
-                        <span id="metric-active-fleet" class="text-xl font-bold font-mono">0</span>
-                    </div>
+                    <h3 class="text-sm font-bold text-gray-200">Fleet Control Matrix Active</h3>
+                    <p class="text-gray-400 max-w-md mx-auto text-[11px]">Please select an operational vehicle track node profile from the groups listed inside the left navigation column layout to build out the high-fidelity tire replacement worksheet.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                        <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-amber-500 font-bold">
-                            <span>1. OTR Duty Equipment</span><span id="badge-otr-count" class="font-mono text-gray-400">0</span>
-                        </div>
-                        <div id="fleet-list-otr" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
+                <!-- DYNAMIC REPLACEMENT WORKSHEET LEDGER WORK AREA -->
+                <div id="replacement-ledger-zone" class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hidden flex flex-col shadow-lg">
+                    
+                    <!-- Form Workspace Header Banner -->
+                    <div class="bg-black/40 border-b border-gray-800 p-2 text-center text-xs font-bold tracking-widest text-gray-300 uppercase">
+                        Tire Replacement Module
                     </div>
-                    <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                        <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-blue-400 font-bold">
-                            <span>2. TBR Prime Haulers</span><span id="badge-tbr-count" class="font-mono text-gray-400">0</span>
-                        </div>
-                        <div id="fleet-list-tbr" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
-                    </div>
-                    <div class="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                        <div class="border-b border-gray-800 pb-1.5 mb-2 flex justify-between items-center text-emerald-400 font-bold">
-                            <span>3. SV & Utility Support</span><span id="badge-sv-count" class="font-mono text-gray-400">0</span>
-                        </div>
-                        <div id="fleet-list-sv" class="space-y-1.5 max-h-[180px] overflow-y-auto"></div>
-                    </div>
-                </div>
 
-                <!-- TIRE REPLACEMENT MODULE WORKSPACE -->
-                <div id="replacement-ledger-zone" class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hidden flex flex-col">
-                    <!-- Form Header Block -->
-                    <div class="border-b border-gray-800 p-3 bg-black/20 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div class="space-y-1 bg-gray-950 p-2 rounded border border-gray-800">
-                            <div class="flex justify-between items-center text-[10px] text-gray-400">
-                                <span>TRANSACTION DATE:</span>
-                                <span class="font-mono text-gray-200 font-semibold" id="replace-header-date">2026-07-18</span>
+                    <!-- Layout Subgrid Block Settings Header Meta Parameters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 border-b border-gray-800 text-[11px]">
+                        <!-- Left Layout Data Column Fields -->
+                        <div class="divide-y divide-gray-800 border-r border-gray-800">
+                            <div class="grid grid-cols-3 items-center">
+                                <div class="bg-black/20 p-2 font-semibold text-gray-400 border-r border-gray-800 h-full flex items-center">DATE:</div>
+                                <div class="col-span-2 p-2 font-mono text-gray-200 text-xs font-bold" id="replace-header-date">2026-07-18</div>
                             </div>
-                            <div class="flex justify-between items-center text-[10px] text-gray-400">
-                                <span>EQUIPMENT NO:</span>
-                                <span class="font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20" id="replace-header-equip-id">SELECT EQUIPMENT</span>
+                            <div class="grid grid-cols-3 items-center">
+                                <div class="bg-black/20 p-2 font-semibold text-gray-400 border-r border-gray-800 h-full flex items-center">EQUIPMENT NO.</div>
+                                <div class="col-span-2 p-2 font-bold text-amber-500 text-xs tracking-wider font-mono" id="replace-header-equip-id">--</div>
+                            </div>
+                            <div class="grid grid-cols-3 items-center">
+                                <div class="bg-black/20 p-2 font-semibold text-gray-400 border-r border-gray-800 h-full flex items-center">SIZE SPEC</div>
+                                <div class="col-span-2 p-2 font-mono text-gray-300 text-xs font-semibold" id="replace-header-equip-size">--</div>
                             </div>
                         </div>
-
-                        <div class="flex flex-col justify-center items-center text-center">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-gray-200">TIRE REPLACEMENT MODULE</span>
-                            <p class="text-[9px] text-gray-500 italic mt-0.5">Interactive Line-item Dual Allocation Ledger</p>
-                        </div>
-
-                        <div class="space-y-1 bg-gray-950 p-2 rounded border border-gray-800">
-                            <div class="flex justify-between items-center text-[10px] text-gray-400">
-                                <span>TIRE WORK ORDER:</span>
-                                <span class="font-mono text-blue-400 font-semibold" id="replace-header-wo-id">AUTO GENERATED</span>
+                        
+                        <!-- Right Layout Data Column Fields -->
+                        <div class="divide-y divide-gray-800">
+                            <div class="grid grid-cols-3 items-center">
+                                <div class="bg-black/20 p-2 font-semibold text-gray-400 border-r border-gray-800 h-full flex items-center">WORK ORDER ID:</div>
+                                <div class="col-span-2 p-2 font-mono text-blue-400 text-xs font-bold tracking-wider" id="replace-header-wo-id">--</div>
                             </div>
-                            <div class="flex items-center space-x-1 text-[10px] text-gray-400">
-                                <span class="shrink-0">SMR / ODOMETER:</span>
-                                <input type="number" placeholder="Enter Reading..." class="w-full bg-gray-900 border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono text-gray-200 focus:outline-none focus:border-amber-500">
+                            <div class="grid grid-cols-3 items-center">
+                                <div class="bg-black/20 p-2 font-semibold text-gray-400 border-r border-gray-800 h-full flex items-center">SMR / ODOMETER:</div>
+                                <div class="col-span-2 p-1.5">
+                                    <input type="number" placeholder="Enter vehicle operating hours/km..." class="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1 text-left font-mono text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Dual Ledger Sheet Grid Table -->
-                    <div class="overflow-x-auto p-3 bg-gray-950">
-                        <div class="min-w-[1000px] border border-gray-800 rounded-lg overflow-hidden bg-gray-900 flex flex-col">
+                    <!-- Balanced Dual Split Structural Inventory Table Platform Grid -->
+                    <div class="overflow-x-auto p-2.5 bg-gray-950/60">
+                        <div class="min-w-[1100px] border border-gray-800 rounded bg-gray-900 flex flex-col overflow-hidden">
                             
-                            <!-- Balanced Header Row -->
-                            <div class="grid grid-cols-11 text-[10px] font-bold uppercase text-center border-b border-gray-800 tracking-wider">
-                                <div class="col-span-5 bg-amber-500/10 text-amber-500 py-1.5 border-r border-gray-800">TIRE REMOVED</div>
-                                <div class="col-span-1 bg-black/40 text-gray-400 py-1.5 border-r border-gray-800">POSITION</div>
-                                <div class="col-span-5 bg-emerald-500/10 text-emerald-400 py-1.5">TIRE INSTALLED</div>
+                            <!-- Master Segment Header Rows Splitter -->
+                            <div class="grid grid-cols-12 text-[10px] font-bold text-center border-b border-gray-800 uppercase tracking-wider">
+                                <div class="col-span-5 bg-amber-500/10 text-amber-400 py-1.5 border-r border-gray-800">Tire Removed Segment</div>
+                                <div class="col-span-1 bg-black/40 text-gray-200 py-1.5 border-r border-gray-800">Tire Position</div>
+                                <div class="col-span-6 bg-emerald-500/10 text-emerald-400 py-1.5">Tire Installed Segment</div>
                             </div>
 
-                            <!-- Column Label Details Row -->
-                            <div class="grid grid-cols-11 text-[9px] font-semibold text-gray-400 bg-gray-950 border-b border-gray-800 text-center uppercase tracking-wide">
-                                <div class="col-span-1 py-1 border-r border-gray-800">BRAND</div>
-                                <div class="col-span-1 py-1 border-r border-gray-800">SERIAL/BRANDING</div>
-                                <div class="col-span-1 py-1 border-r border-gray-800">REMOVAL REASON</div>
+                            <!-- Structural Field Labels Table Strip Sub-Header Grid -->
+                            <div class="grid grid-cols-12 text-[9px] font-bold text-gray-400 bg-gray-950 border-b border-gray-800 text-center uppercase tracking-wider">
+                                <div class="col-span-1 py-1 border-r border-gray-800">Brand Make</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">Serial / Brand #</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">Removal Reason</div>
                                 <div class="col-span-1 py-1 border-r border-gray-800">RTD (mm)</div>
-                                <div class="col-span-1 py-1 border-r border-gray-800">DISPOSITION</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">Disposition</div>
                                 
-                                <div class="col-span-1 py-1 bg-black/20 text-gray-300 font-bold border-r border-gray-800">INDEX</div>
+                                <div class="col-span-1 py-1 bg-gray-900 border-r border-gray-800 text-gray-200">Index Tag</div>
                                 
-                                <div class="col-span-1 py-1 border-r border-gray-800">BRAND</div>
-                                <div class="col-span-1 py-1 border-r border-gray-800">SERIAL/BRANDING</div>
-                                <div class="col-span-1 py-1 border-r border-gray-800">RTD (mm)</div>
-                                <div class="col-span-2">REMARKS</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">Brand Make</div>
+                                <div class="col-span-2 py-1 border-r border-gray-800">Serial Lookup / Selection</div>
+                                <div class="col-span-1 py-1 border-r border-gray-800">Tread Depth</div>
+                                <div class="col-span-2 py-1">Remarks Context</div>
                             </div>
 
-                            <!-- Container Row Injection Platform -->
+                            <!-- Interactive Real-time Micro-row Form Injector Box -->
                             <div id="replacement-grid-rows" class="divide-y divide-gray-800 bg-gray-900 font-mono text-[11px]">
-                                <!-- Dynamically filled upon chassis click -->
+                                <!-- Handled dynamically via selection context events inside pipeline -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Action Command Footer Bar -->
-                    <div class="bg-black/20 border-t border-gray-800 p-2.5 flex justify-between items-center">
-                        <span class="text-[10px] text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i> Available tires are mapped directly from inventory with status tags: <b class="text-gray-400">Brand New, Spare, For Repair</b>.</span>
-                        <button onclick="triggerSaveSequence()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1 rounded shadow transition flex items-center gap-1.5 uppercase text-[10px]">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Save Replacement Ledger
+                    <!-- Worksheet Actions Execution Control Save Bar -->
+                    <div class="bg-black/30 border-t border-gray-800 p-2.5 flex justify-end items-center">
+                        <button onclick="triggerSaveSequence()" class="bg-gray-100 hover:bg-white text-gray-950 font-bold px-6 py-1 rounded shadow transition uppercase text-[10px] tracking-widest border border-white">
+                            Commit Replacement Dataset
                         </button>
                     </div>
                 </div>
@@ -432,8 +445,8 @@
                 if (currentStatus === "Brand New") remTread = spec.orig;
 
                 if (Math.random() > 0.45) {
-                    const prefix = group === "OTR" ? "DT" : (group === "TBR" ? "LM" : "SU");
-                    currentStatus = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
+                    const prefix = group === "OTR" ? "HD-Truck" : (group === "TBR" ? "Logistics-T" : "Support-Van");
+                    currentStatus = `${prefix}0${Math.floor(1 + Math.random() * 5)}`;
                 }
 
                 mockDatabase.push({
@@ -489,6 +502,20 @@
             document.querySelectorAll('.tab-canvas').forEach(el => el.classList.add('hidden'));
             document.getElementById(`canvas-${tabId}`).classList.remove('hidden');
             
+            const intakePanel = document.getElementById('utility-panel');
+            const fleetSidePanel = document.getElementById('fleet-side-panel');
+
+            if (tabId === 'inventory') {
+                intakePanel.classList.remove('hidden');
+                fleetSidePanel.classList.add('hidden');
+            } else {
+                intakePanel.classList.add('hidden');
+                fleetSidePanel.classList.remove('hidden');
+                // Return replacement module view safely back to normal step context on tab reset
+                document.getElementById('fleet-unselected-placeholder').classList.remove('hidden');
+                document.getElementById('replacement-ledger-zone').classList.add('hidden');
+            }
+
             ['inventory', 'fleet'].forEach(t => {
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if (t === tabId) btn.className = "w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 bg-amber-600 text-white";
@@ -564,6 +591,7 @@
             
             if (isAlreadyOpen) return;
 
+            // Gather values present based on Group + Status metrics filters
             let contextualData = globalCachedTires;
             if (currentGroupFilter !== 'ALL') contextualData = contextualData.filter(t => t.group === currentGroupFilter);
             if (currentStatusFilter !== 'ALL') {
@@ -599,27 +627,20 @@
 
         function processAndRenderCanvasBoard() {
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
-            let otrList = [], tbrList = [], svList = [];
+            let otrMap = {}, tbrMap = {}, svMap = {};
 
             globalCachedTires.forEach(t => {
-                if (isOperational(t.status)) {
-                    if (t.group === "OTR") otrList.push(t);
-                    else if (t.group === "TBR") tbrList.push(t);
-                    else svList.push(t);
-                }
-            });
-
-            let metricsData = globalCachedTires;
-            if (currentGroupFilter !== 'ALL') {
-                metricsData = globalCachedTires.filter(t => t.group === currentGroupFilter);
-            }
-
-            metricsData.forEach(t => {
                 if (t.status === "Brand New") brandNew++;
                 else if (t.status === "Warehouse Spare") spare++;
                 else if (t.status === "For Repair") repair++;
                 else if (t.status === "Scrapped Asset") scrap++;
-                else if (isOperational(t.status)) operational++;
+                
+                if (isOperational(t.status)) {
+                    operational++;
+                    if (t.group === "OTR") { if(!otrMap[t.status]) otrMap[t.status] = []; otrMap[t.status].push(t); }
+                    else if (t.group === "TBR") { if(!tbrMap[t.status]) tbrMap[t.status] = []; tbrMap[t.status].push(t); }
+                    else { if(!svMap[t.status]) svMap[t.status] = []; svMap[t.status].push(t); }
+                }
             });
 
             document.getElementById('sq-brand-new').innerText = brandNew;
@@ -627,107 +648,87 @@
             document.getElementById('sq-operational').innerText = operational;
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
-            
-            document.getElementById('metric-active-fleet').innerText = globalCachedTires.filter(t => isOperational(t.status)).length;
-            document.getElementById('badge-otr-count').innerText = otrList.length;
-            document.getElementById('badge-tbr-count').innerText = tbrList.length;
-            document.getElementById('badge-sv-count').innerText = svList.length;
 
-            // Extract unique active vehicle IDs
-            const buildVehicleChassisMap = (arr) => {
-                const map = {};
-                arr.forEach(t => {
-                    if(!map[t.status]) map[t.status] = [];
-                    map[t.status].push(t);
-                });
+            document.getElementById('badge-otr-count').innerText = Object.keys(otrMap).length;
+            document.getElementById('badge-tbr-count').innerText = Object.keys(tbrMap).length;
+            document.getElementById('badge-sv-count').innerText = Object.keys(svMap).length;
+
+            const makeListHTML = (map) => {
                 return Object.keys(map).map(chassis => `
-                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
-                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-monster mr-1 text-[9px]"></i>${chassis}</span>
-                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-bold">${map[chassis].length} Tires Bound</span>
+                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${chassis}</span>
+                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${map[chassis].length} Pos</span>
                     </div>
                 `).join('');
             };
 
-            document.getElementById('fleet-list-otr').innerHTML = buildVehicleChassisMap(otrList) || '<p class="text-gray-500 text-center italic py-2">No active OTR mounts</p>';
-            document.getElementById('fleet-list-tbr').innerHTML = buildVehicleChassisMap(tbrList) || '<p class="text-gray-500 text-center italic py-2">No active TBR mounts</p>';
-            document.getElementById('fleet-list-sv').innerHTML = buildVehicleChassisMap(svList) || '<p class="text-gray-500 text-center italic py-2">No active SV mounts</p>';
+            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(otrMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(tbrMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(svMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
 
             renderInventoryGridOnly();
             renderUtilityPanel();
         }
 
-        /* DYNAMIC REPLACEMENT SWAP ENGINE */
-        function launchReplacementModule(chassisId, groupClass) {
-            document.getElementById('replace-header-equip-id').innerText = chassisId;
-            document.getElementById('replace-header-wo-id').innerText = `WO-${chassisId.replace('-', '')}-2026`;
+        function launchReplacementModule(chassisId, groupClass, sizeSpec) {
+            document.getElementById('fleet-unselected-placeholder').classList.add('hidden');
             
+            document.getElementById('replace-header-equip-id').innerText = chassisId;
+            document.getElementById('replace-header-equip-size').innerText = sizeSpec || "N/A SPEC";
+            document.getElementById('replace-header-wo-id').innerText = `WO-${groupClass}-${Math.floor(1000 + Math.random() * 9000)}`;
+            document.getElementById('replace-header-date').innerText = getTodayDateString();
+
             const boundTires = globalCachedTires.filter(t => t.status === chassisId);
             const gridContainer = document.getElementById('replacement-grid-rows');
             gridContainer.innerHTML = '';
 
-            // Filter unmounted inventory pool available for installation
             const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
-
-            if (boundTires.length === 0) {
-                gridContainer.innerHTML = `<div class="p-4 text-center text-gray-500 italic">No operational assets are currently mapped to chassis node indices.</div>`;
-                return;
-            }
 
             boundTires.forEach((tire, index) => {
                 const posId = index + 1;
                 const row = document.createElement('div');
-                row.className = "grid grid-cols-11 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
+                row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
                 
                 row.innerHTML = `
                     <!-- REMOVED SECTION -->
-                    <div class="col-span-1 py-1 text-gray-400 font-medium truncate px-1">${tire.brand}</div>
-                    <div class="col-span-1 py-1 font-bold text-amber-500 tracking-wider">${tire.serial_number}</div>
+                    <div class="col-span-1 text-gray-400 px-1 truncate text-left font-sans">${tire.brand}</div>
+                    <div class="col-span-1 font-bold text-amber-500 tracking-wider">${tire.serial_number}</div>
                     <div class="col-span-1 px-1">
-                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-gray-300 focus:border-amber-500 outline-none">
-                            <option value="">-- Reason --</option>
-                            <option>1. CHANGE-OUT</option>
-                            <option>2. WORN-OUT</option>
-                            <option>3. IMPACT BREAK</option>
-                            <option>4. PUNCTURED</option>
-                            <option>5. SIDEWALL CUT</option>
-                            <option>6. TREAD CHUNKING</option>
-                            <option>7. HEAT SEPARATION</option>
+                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
+                            <option value="">-- Select --</option>
+                            <option>1. CHANGE-OUT</option><option>2. WORN-OUT</option><option>3. IMPACT BREAK</option>
+                            <option>4. PUNCTURED</option><option>5. CUTS</option>
+                            <option>6. TREAD CHUNKING</option><option>7. SEPARATION</option><option>8. OTHERS</option>
                         </select>
                     </div>
                     <div class="col-span-1 px-1">
-                        <input type="number" step="0.1" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-center font-mono text-gray-300 outline-none">
+                        <input type="number" step="0.1" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-center font-mono text-gray-300 outline-none">
                     </div>
-                    <div class="col-span-1 px-1">
-                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-gray-300 focus:border-amber-500 outline-none">
-                            <option value="">-- Disposition --</option>
-                            <option>1. FOR SPARE</option>
-                            <option>2. FOR REPAIR</option>
-                            <option>3. FOR ROTATION</option>
-                            <option>4. SCRAP</option>
+                    <div class="col-span-1 px-1 border-r border-gray-800">
+                        <select class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
+                            <option value="">-- Select --</option>
+                            <option>1. FOR SPARE</option><option>2. FOR REPAIR</option><option>3. FOR ROTATION</option><option>4. SCRAP</option>
                         </select>
                     </div>
 
-                    <!-- POSITION NODE SEPARATOR -->
-                    <div class="col-span-1 py-1 bg-black/30 font-bold text-amber-500 select-none text-[10px]">POS-${posId}</div>
+                    <!-- POSITION NODE -->
+                    <div class="col-span-1 py-1 bg-gray-950/80 font-bold text-gray-300 border-r border-gray-800 text-[10px]">POS${posId}</div>
 
                     <!-- INSTALLED SECTION -->
-                    <div class="col-span-1 py-1 text-gray-400 font-medium px-1 truncate" id="inst-brand-POS${posId}">--</div>
-                    <div class="col-span-1 px-1">
-                        <select onchange="handleInventoryLookup(this, 'POS${posId}')" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-[10px] text-emerald-400 font-bold outline-none focus:border-emerald-500">
-                            <option value="">-- Select Serial --</option>
+                    <div class="col-span-1 text-gray-400 px-1 truncate text-left font-sans" id="inst-brand-POS${posId}">--</div>
+                    <div class="col-span-2 px-1">
+                        <select onchange="handleInventoryLookup(this, 'POS${posId}')" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-emerald-400 font-bold outline-none">
+                            <option value="">-- Choose Spare --</option>
                             ${unmountedPool.map(t => `<option value="${t.serial_number}">${t.serial_number} (${t.status})</option>`).join('')}
                         </select>
                     </div>
-                    <!-- AUTOCAPTURED RTD FROM INVENTORY ENGINE STATE -->
-                    <div class="col-span-1 py-1 text-emerald-400 font-bold font-mono" id="inst-rtd-POS${posId}">--</div>
-                    <div class="col-span-2 py-1 text-left truncate text-gray-400 px-2 text-[10px]" id="inst-remarks-POS${posId}">--</div>
+                    <div class="col-span-1 font-bold text-emerald-400 font-mono" id="inst-rtd-POS${posId}">--</div>
+                    <div class="col-span-2 text-left truncate text-gray-500 px-1.5 text-[10px] font-sans" id="inst-remarks-POS${posId}">--</div>
                 `;
                 gridContainer.appendChild(row);
             });
 
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
-            // Smoothly jump presentation view focus downwards directly onto open module ledger sheet
-            document.getElementById('replacement-ledger-zone').scrollIntoView({ behavior: 'smooth' });
         }
 
         function handleInventoryLookup(selectEl, positionTag) {
@@ -741,21 +742,14 @@
             if (targetTire) {
                 labelBrand.innerText = targetTire.brand;
                 labelRtd.innerText = `${Number(targetTire.remaining_tread_depth || 0).toFixed(1)} mm`;
-                labelRemarks.innerText = `${targetTire.tire_size} | Pattern: ${targetTire.pattern || 'STD'}`;
+                labelRemarks.innerText = `${targetTire.tire_size} | ${targetTire.pattern}`;
             } else {
-                labelBrand.innerText = "--";
-                labelRtd.innerText = "--";
-                labelRemarks.innerText = "--";
+                labelBrand.innerText = "--"; labelRtd.innerText = "--"; labelRemarks.innerText = "--";
             }
         }
 
         function triggerSaveSequence() {
-            const activeChassis = document.getElementById('replace-header-equip-id').innerText;
-            if (activeChassis === "SELECT EQUIPMENT") {
-                alert("Operation Error: Please select an active asset from the deployment boards first.");
-                return;
-            }
-            alert(`Verified: Replacement ledger states written and logged to chassis node: ${activeChassis}.`);
+            alert(`Verified: Replacement ledger tracking metrics logged successfully.`);
         }
 
         function renderInventoryGridOnly() {
@@ -887,6 +881,7 @@
 
         function renderUtilityPanel() {
             const side = document.getElementById('utility-panel');
+            if (!side) return;
             side.innerHTML = `
                 <div class="space-y-3">
                     <div class="flex items-center space-x-1.5 text-emerald-400 font-bold text-[10px] uppercase tracking-wider border-b border-gray-800 pb-1">
