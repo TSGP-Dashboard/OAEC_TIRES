@@ -46,7 +46,7 @@
     <!-- Master Grid -->
     <main class="container mx-auto px-2 mt-3 grid grid-cols-1 lg:grid-cols-15 gap-4">
         
-        <!-- Navigation Panel (20%) -->
+        <!-- Navigation & Dynamic Intake Panel (20%) -->
         <div class="lg:col-span-3 space-y-3">
             <nav class="bg-gray-900 border border-gray-800 rounded-lg p-1.5 space-y-0.5">
                 <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 bg-amber-600 text-white">
@@ -57,8 +57,9 @@
                 </button>
             </nav>
 
+            <!-- Dynamic Batch Intake Panel -->
             <div id="utility-panel" class="bg-gray-900 border border-gray-800 rounded-lg p-3">
-                <!-- Injected Dynamically -->
+                <!-- Injected Dynamically via renderUtilityPanel() -->
             </div>
         </div>
 
@@ -68,7 +69,7 @@
             <!-- CANVAS: INVENTORY -->
             <div id="canvas-inventory" class="tab-canvas space-y-4">
                 
-                <!-- 5 Metrics Cards Grid -->
+                <!-- Metrics Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <div onclick="setStatusFilter('Brand New')" id="card-Brand-New" class="bg-gray-900 border border-gray-800 hover:border-emerald-500/50 cursor-pointer transition rounded-lg p-3 text-center">
                         <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Brand New</p>
@@ -101,7 +102,7 @@
                     <button onclick="setGroupFilter('SV')" id="filter-btn-SV" class="px-2 py-0.5 rounded text-[11px] font-medium text-gray-400 bg-gray-800 hover:text-gray-200 transition">Support Vehicle (SV)</button>
                 </div>
 
-                <!-- Ultra-Compact Technical Registry Table Container -->
+                <!-- Technical Registry Table -->
                 <div class="bg-gray-900 border border-gray-800 rounded-lg shadow-sm overflow-hidden">
                     <div class="px-3 py-2 bg-gray-900/60 border-b border-gray-800 flex justify-between items-center">
                         <div class="flex items-center space-x-1.5">
@@ -233,6 +234,7 @@
         let globalCachedTires = []; 
         let supabaseClient = null;
         let isSupabaseConfigured = false;
+        let currentIntakeCount = 1; // Default row value
 
         // Structured Database Bootstrapping covering traditional 11 columns
         function bootstrapMockDatabase() {
@@ -245,7 +247,7 @@
                 "SV": { size: "265/70R17", compound: "Standard Road", ply: "10PR", orig: 14.5, type: "Tube Type" }
             };
 
-            for (let i = 1; i <= 80; i++) {
+            for (let i = 1; i <= 40; i++) {
                 const group = groups[Math.floor(Math.random() * groups.length)];
                 const spec = specs[group];
                 const brand = brands[Math.floor(Math.random() * brands.length)];
@@ -255,7 +257,6 @@
 
                 if (currentStatus === "Brand New") remTread = spec.orig;
 
-                // Operational conversion logic (Simulate bound equipment status)
                 if (Math.random() > 0.45) {
                     const prefix = group === "OTR" ? "DT" : (group === "TBR" ? "LM" : "SU");
                     currentStatus = `${prefix}-${Math.floor(100 + Math.random() * 899)}`;
@@ -282,7 +283,7 @@
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 isSupabaseConfigured = true;
             }
-        } catch (e) { console.error("Cloud failure, running sandbox sandbox fallback mode", e); }
+        } catch (e) { console.error("Cloud failure, running sandbox fallback mode", e); }
 
         async function syncEnginePipeline() {
             const indicator = document.getElementById('ping-indicator');
@@ -439,18 +440,21 @@
             });
         }
 
+        // Render Panel dynamically with multiple dynamic row generation support
         function renderUtilityPanel() {
             const side = document.getElementById('utility-panel');
             side.innerHTML = `
                 <div class="space-y-3">
-                    <div class="flex items-center space-x-1.5 text-emerald-400 font-bold text-[10px] uppercase tracking-wider">
+                    <div class="flex items-center space-x-1.5 text-emerald-400 font-bold text-[10px] uppercase tracking-wider border-b border-gray-800 pb-1">
                         <i class="fa-solid fa-square-plus"></i><span>Intake Material Initialization</span>
                     </div>
+                    
                     <div class="space-y-2 text-[11px]">
                         <div>
-                            <label class="block text-gray-400 mb-0.5">Asset Serial / Branding #</label>
-                            <input type="text" id="add-serial" placeholder="e.g. TR-99402" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono focus:outline-none focus:border-amber-500 uppercase">
+                            <label class="block text-amber-500 font-bold text-[10px] uppercase mb-0.5">Total Tires for Entry</label>
+                            <input type="number" id="batch-count" min="1" max="20" value="${currentIntakeCount}" oninput="updateSerialRows(this.value)" class="w-full bg-gray-950 border border-amber-600/50 rounded p-1 text-amber-400 font-mono font-bold focus:outline-none">
                         </div>
+
                         <div class="grid grid-cols-2 gap-1.5">
                             <div>
                                 <label class="block text-gray-400 mb-0.5">Classification Group</label>
@@ -467,7 +471,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-1.5">
                             <div>
-                                <label class="block text-gray-400 mb-0.5">Dimension Size</label>
+                                <label class="block text-gray-400 mb-0.5">Tire Size</label>
                                 <input type="text" id="add-size" placeholder="45/65R45" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                             </div>
                             <div>
@@ -481,7 +485,7 @@
                                 <input type="text" id="add-compound" placeholder="A4" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-gray-400 mb-0.5">Ply</label>
+                                <label class="block text-gray-400 mb-0.5">Ply Rating</label>
                                 <input type="text" id="add-ply" placeholder="58PR" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 focus:outline-none">
                             </div>
                             <div>
@@ -489,12 +493,49 @@
                                 <input type="number" step="0.1" id="add-orig" placeholder="28" class="w-full bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono focus:outline-none">
                             </div>
                         </div>
-                        <button onclick="executeAddAsset()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded transition mt-1">
-                            Log New Asset
+
+                        <!-- Dynamic Serial Code Fields Wrapper -->
+                        <div class="border-t border-gray-800/80 pt-2 mt-2">
+                            <label class="block text-gray-400 font-semibold text-[10px] mb-1 uppercase tracking-wider">Serial Number / Branding Number</label>
+                            <div id="serial-inputs-container" class="space-y-1 max-h-[160px] overflow-y-auto pr-1">
+                                <!-- Generated Dynamic Row Blocks Injection -->
+                            </div>
+                        </div>
+
+                        <button onclick="executeBatchSave()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded transition mt-2 shadow uppercase tracking-wide">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Batch Intake
                         </button>
                     </div>
                 </div>
             `;
+            updateSerialRows(currentIntakeCount);
+        }
+
+        // Dynamically creates text rows depending on the value of the "Total Tires for Entry" input field
+        function updateSerialRows(countValue) {
+            let total = parseInt(countValue) || 1;
+            if (total < 1) total = 1;
+            if (total > 30) total = 30; // Safety threshold UI limit
+            currentIntakeCount = total;
+
+            const container = document.getElementById('serial-inputs-container');
+            if(!container) return;
+
+            // Retain values already written by users while increasing/decreasing rows
+            const existingValues = [];
+            container.querySelectorAll('input').forEach(inp => existingValues.push(inp.value));
+
+            container.innerHTML = '';
+            for (let i = 0; i < total; i++) {
+                const val = existingValues[i] || '';
+                const row = document.createElement('div');
+                row.className = "flex items-center space-x-1";
+                row.innerHTML = `
+                    <span class="text-gray-500 font-mono text-[9px] w-4 text-right">${i + 1}.</span>
+                    <input type="text" placeholder="E.G. TR-${20000 + (i*150)}" value="${val}" class="batch-serial-field flex-1 bg-gray-950 border border-gray-800 rounded p-1 text-gray-200 font-mono uppercase focus:outline-none focus:border-amber-500">
+                `;
+                container.appendChild(row);
+            }
         }
 
         // --- MANIPULATION PROCEDURES & DIALOG CONTEXT ENGINE ---
@@ -588,33 +629,48 @@
             }
         }
 
-        async function executeAddAsset() {
-            const serial = document.getElementById('add-serial').value.trim().toUpperCase();
+        // Batch parsing logic mapping to multiple rows
+        async function executeBatchSave() {
             const group = document.getElementById('add-group').value;
             const type = document.getElementById('add-type').value;
             const size = document.getElementById('add-size').value.trim();
             const brand = document.getElementById('add-brand').value.trim();
-            const compound = document.getElementById('add-compound').value.trim();
-            const ply = document.getElementById('add-ply').value.trim();
+            const compound = document.getElementById('add-compound').value.trim() || "Standard";
+            const ply = document.getElementById('add-ply').value.trim() || "16PR";
             const orig = parseFloat(document.getElementById('add-orig').value) || 0;
 
-            if (!serial || !size || !brand) return alert("Required data missing.");
+            if (!size || !brand) return alert("Shared context payload parameters (Size & Brand Make) are strictly required.");
 
-            const payload = {
-                serial_number: serial, group: group, tire_size: size, brand: brand,
-                compound: compound || "Standard", ply_rating: ply || "16PR", type: type,
-                original_tread_depth: orig, remaining_tread_depth: orig, status: "Brand New"
-            };
+            // Collect all unique serial inputs
+            const inputs = document.querySelectorAll('.batch-serial-field');
+            const records = [];
+            
+            for(let i=0; i < inputs.length; i++) {
+                const serialVal = inputs[i].value.trim().toUpperCase();
+                if(!serialVal) {
+                    return alert(`Validation Error: Serial value field row #${i+1} is completely blank.`);
+                }
+                records.push({
+                    serial_number: serialVal, group: group, tire_size: size, brand: brand,
+                    compound: compound, ply_rating: ply, type: type,
+                    original_tread_depth: orig, remaining_tread_depth: orig, status: "Brand New"
+                });
+            }
 
             if (!isSupabaseConfigured) {
-                mockDatabase.push(payload);
+                // Bulk inject sandbox data
+                records.forEach(r => mockDatabase.push(r));
+                alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
+                currentIntakeCount = 1; 
                 syncEnginePipeline();
             } else {
                 try {
-                    const { error } = await supabaseClient.from('tires').insert([payload]);
+                    const { error } = await supabaseClient.from('tires').insert(records);
                     if (error) throw error;
+                    alert(`Successfully submitted batch array payload payload containing ${records.length} tires to Supabase.`);
+                    currentIntakeCount = 1;
                     syncEnginePipeline();
-                } catch(e) { alert(e.message); }
+                } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
             }
         }
 
