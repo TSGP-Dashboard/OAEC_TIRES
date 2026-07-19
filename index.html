@@ -742,53 +742,7 @@
                 const row = document.createElement('div');
                 row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
                 
-                row.innerHTML = `
-                    <!-- REMOVED SECTION -->
-                    <div class="col-span-1 text-gray-400 px-1 truncate text-left font-sans">${tire.brand}</div>
-                    <div class="col-span-1 font-bold text-amber-500 tracking-wider">${tire.serial_number}</div>
-                    <div class="col-span-1 px-1">
-                        <select id="rem-reason-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
-                            <option value="">-- Select --</option>
-                            <option value="CHANGE-OUT">1. CHANGE-OUT</option>
-                            <option value="WORN-OUT">2. WORN-OUT</option>
-                            <option value="IMPACT BREAK">3. IMPACT BREAK</option>
-                            <option value="PUNCTURED">4. PUNCTURED</option>
-                            <option value="CUTS">5. CUTS (SIDEWALL, SHOULDER, TREAD, BEAD)</option>
-                            <option value="TREAD CHUNKING">6. TREAD CHUNKING/CHIPPING</option>
-                            <option value="SEPARATION">7. SEPARATION (TREAD, HEAT)</option>
-                            <option value="BULGING">8. BULGING</option>
-                            <option value="OTHERS">9. OTHERS</option>
-                        </select>
-                    </div>
-                    <div class="col-span-1 px-1">
-                        <input type="number" step="0.1" id="rem-rtd-POS${posId}" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-center font-mono text-gray-300 outline-none">
-                    </div>
-                    <div class="col-span-1 px-1 border-r border-gray-800">
-                        <select id="rem-disp-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-gray-300 outline-none">
-                            <option value="">-- Select --</option>
-                            <option value="FOR SPARE">1. FOR SPARE</option>
-                            <option value="FOR REPAIR">2. FOR REPAIR</option>
-                            <option value="FOR ROTATION">3. FOR ROTATION</option>
-                            <option value="FOR EVALUATION">4. FOR EVALUATION</option>
-                            <option value="SCRAP">5. SCRAP</option>
-                            <option value="WARRANTY">6. WARRANTY</option>
-                        </select>
-                    </div>
-
-                    <!-- POSITION NODE -->
-                    <div class="col-span-1 py-1 bg-gray-950/80 font-bold text-gray-300 border-r border-gray-800 text-[10px]">POS${posId}</div>
-
-                    <!-- INSTALLED SECTION -->
-                    <div class="col-span-1 text-gray-400 px-1 truncate text-left font-sans" id="inst-brand-POS${posId}">--</div>
-                    <div class="col-span-2 px-1">
-                        <select onchange="handleInventoryLookup(this, 'POS${posId}')" id="inst-serial-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded p-0.5 text-[10px] text-emerald-400 font-bold outline-none">
-                            <option value="">-- Choose Spare --</option>
-                            ${unmountedPool.map(t => `<option value="${t.serial_number}">${t.serial_number} (${t.status})</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="col-span-1 font-bold text-emerald-400 font-mono" id="inst-rtd-POS${posId}">--</div>
-                    <div class="col-span-2 text-left truncate text-gray-500 px-1.5 text-[10px] font-sans" id="inst-remarks-POS${posId}">--</div>
-                `;
+                
                 gridContainer.appendChild(row);
             });
 
