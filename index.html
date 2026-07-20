@@ -525,6 +525,41 @@
             processAndRenderCanvasBoard();
         }
 
+        async function loadEquipmentForFleet() {
+            if (!isSupabaseConfigured) return;
+            
+            try {
+                let { data, error } = await supabaseClient.from('equipment').select('*');
+                if (error) throw error;
+                
+                let OTREquipment = [], TBREquipment = [], SVEquipment = [];
+                
+                (data || []).forEach(equip => {
+                    const cat = String(equip.category || '').toLowerCase().trim();
+                    if (cat === "heavy") OTREquipment.push(equip);
+                    else if (cat === "logistics") TBREquipment.push(equip);
+                    else if (cat === "sv") SVEquipment.push(equip);
+                });
+                
+                const renderList = (equipList) => {
+                    if (equipList.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                    return equipList.map(eq => {
+                        const equipNum = eq.equipment_num || 'N/A';
+                        return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                            <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
+                            <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${globalCachedTires.filter(t => t.status === equipNum).length} Tires</span>
+                        </div>`;
+                    }).join('');
+                };
+                
+                document.getElementById('fleet-list-otr').innerHTML = renderList(OTREquipment);
+                document.getElementById('fleet-list-tbr').innerHTML = renderList(TBREquipment);
+                document.getElementById('fleet-list-sv').innerHTML = renderList(SVEquipment);
+            } catch (e) {
+                console.warn("Equipment load error:", e);
+            }
+        }
+
         function switchTab(tabId) {
             activeTab = tabId;
             document.querySelectorAll('.tab-canvas').forEach(el => el.classList.add('hidden'));
@@ -541,6 +576,7 @@
                 fleetSidePanel.classList.remove('hidden');
                 document.getElementById('fleet-unselected-placeholder').classList.remove('hidden');
                 document.getElementById('replacement-ledger-zone').classList.add('hidden');
+                loadEquipmentForFleet();
             }
 
             ['inventory', 'fleet'].forEach(t => {
