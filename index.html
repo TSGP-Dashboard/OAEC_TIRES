@@ -526,41 +526,63 @@
         }
 
         async function loadEquipmentForFleet() {
-            if (!isSupabaseConfigured) return;
-            
-            try {
-                let { data, error } = await supabaseClient.from('equipment').select('*');
-                if (error) throw error;
-                
-                let OTREquipment = [], TBREquipment = [], SVEquipment = [];
-                
-                (data || []).forEach(equip => {
-                    const cat = String(equip.category || '').toLowerCase().trim();
-                    if (cat === "heavy") OTREquipment.push(equip);
-                    else if (cat === "logistics") TBREquipment.push(equip);
-                    else if (cat === "sv") SVEquipment.push(equip);
-                });
-                
-                const renderList = (equipList) => {
-                    if (equipList.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-                    return equipList.map(eq => {
-                        const equipNum = eq.equipment_num || 'N/A';
-                        return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
-                            <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
-                            <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${globalCachedTires.filter(t => t.status === equipNum).length} Tires</span>
-                        </div>`;
-                    }).join('');
-                };
-                
-                document.getElementById('fleet-list-otr').innerHTML = renderList(OTREquipment);
-                document.getElementById('fleet-list-tbr').innerHTML = renderList(TBREquipment);
-                document.getElementById('fleet-list-sv').innerHTML = renderList(SVEquipment);
-            } catch (e) {
-                console.warn("Equipment load error:", e);
+            if (!isSupabaseConfigured) {
+                return;
             }
+            
+            console.log("Loading equipment from Supabase...");
+            
+            let { data, error } = await supabaseClient.from('equipment').select('*');
+            
+            if (error) {
+                console.log("Equipment fetch returned an error");
+                document.getElementById('fleet-list-otr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-tbr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-sv').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                return;
+            }
+            
+            console.log("Equipment data received:", data);
+            
+            if (!data || data.length === 0) {
+                console.log("No equipment data");
+                document.getElementById('fleet-list-otr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-tbr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-sv').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                return;
+            }
+            
+            let OTREquipment = [], TBREquipment = [], SVEquipment = [];
+            
+            data.forEach(equip => {
+                const cat = String(equip.category || '').toLowerCase().trim();
+                if (cat === "heavy") OTREquipment.push(equip);
+                else if (cat === "logistics") TBREquipment.push(equip);
+                else if (cat === "sv") SVEquipment.push(equip);
+            });
+            
+            console.log("Grouped equipment - OTR:", OTREquipment.length, "TBR:", TBREquipment.length, "SV:", SVEquipment.length);
+            
+            const renderList = (equipList) => {
+                if (equipList.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                return equipList.map(eq => {
+                    const equipNum = eq.equipment_num || 'N/A';
+                    return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
+                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${globalCachedTires.filter(t => t.status === equipNum).length} Tires</span>
+                    </div>`;
+                }).join('');
+            };
+            
+            document.getElementById('fleet-list-otr').innerHTML = renderList(OTREquipment);
+            document.getElementById('fleet-list-tbr').innerHTML = renderList(TBREquipment);
+            document.getElementById('fleet-list-sv').innerHTML = renderList(SVEquipment);
+            
+            console.log("Equipment rendered successfully");
         }
 
         function switchTab(tabId) {
+            console.log("switchTab called with tabId:", tabId);
             activeTab = tabId;
             document.querySelectorAll('.tab-canvas').forEach(el => el.classList.add('hidden'));
             document.getElementById(`canvas-${tabId}`).classList.remove('hidden');
@@ -1288,7 +1310,19 @@
             }
         }
 
-        window.onload = () => { syncEnginePipeline(); };
+        window.onload = () => { 
+            syncEnginePipeline();
+            
+            // Wire up tab buttons
+            document.getElementById('tab-btn-inventory').addEventListener('click', () => {
+                console.log("Inventory tab clicked");
+                switchTab('inventory');
+            });
+            document.getElementById('tab-btn-fleet').addEventListener('click', () => {
+                console.log("Fleet tab clicked");
+                switchTab('fleet');
+            });
+        };
     </script>
 </body>
 </html>
