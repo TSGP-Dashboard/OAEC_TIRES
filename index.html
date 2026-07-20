@@ -620,7 +620,6 @@
 
             let contextualData = globalCachedTires;
             
-            // Adjusted logic to respect clean category text fallbacks for group switches
             if (currentGroupFilter !== 'ALL') {
                 contextualData = contextualData.filter(t => {
                     const normCat = String(t.category || '').toLowerCase().trim();
@@ -636,13 +635,22 @@
                 else contextualData = contextualData.filter(t => t.status === currentStatusFilter);
             }
 
-            const uniqueValues = ['ALL', ...new Set(contextualData.map(item => String(item[columnKey] || 'N/A').trim()))];
+            // Enhanced matching parameters that accept blank values cleanly across multi-source payloads
+            const filterMap = { ...columnHeaderFilters };
+            delete filterMap[columnKey];
+            Object.keys(filterMap).forEach(k => {
+                if (filterMap[k] !== 'ALL') {
+                    contextualData = contextualData.filter(item => String(item[k] || '').trim() === filterMap[k]);
+                }
+            });
+
+            const uniqueValues = ['ALL', ...new Set(contextualData.map(item => String(item[columnKey] || '').trim()))].filter(v => v !== '');
             
             currentMenu.innerHTML = uniqueValues.map(val => {
                 const isSelected = columnHeaderFilters[columnKey] === val;
                 return `
                     <div onclick="selectHeaderFilterValue('${columnKey}', '${val}')" class="px-2 py-1 text-[10px] rounded cursor-pointer transition text-gray-300 hover:bg-amber-500 hover:text-gray-950 flex items-center justify-between ${isSelected ? 'bg-gray-800 text-amber-400 font-bold' : ''}">
-                        <span>${val}</span>
+                        <span>${val === 'ALL' ? 'All Values' : val}</span>
                         ${isSelected ? '<i class="fa-solid fa-check text-[8px]"></i>' : ''}
                     </div>
                 `;
@@ -675,7 +683,6 @@
                 if (isOperational(t.status)) {
                     operational++;
                     
-                    // Case-insensitive database matching based on user parameters
                     const normalizedCategory = String(t.category || '').toLowerCase().trim();
                     const groupClass = String(t.group || '').toUpperCase().trim();
 
@@ -734,7 +741,6 @@
             const gridContainer = document.getElementById('replacement-grid-rows');
             gridContainer.innerHTML = '';
 
-            // Filter context mapping inventory availability explicitly as requested
             const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
 
             boundTires.forEach((tire, index) => {
@@ -821,7 +827,6 @@
                 return;
             }
 
-            // Client data mutation cycle
             const rows = document.getElementById('replacement-grid-rows').children;
             const targetFleetTires = globalCachedTires.filter(t => t.status === equipId);
 
@@ -835,7 +840,6 @@
                     const newDisp = document.getElementById(`rem-disp-POS${posId}`).value || "Warehouse Spare";
 
                     if(removedTire && installedTire) {
-                        // Apply status updates to mock db or target cloud mappings
                         removedTire.status = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
                         removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
                         installedTire.status = equipId;
@@ -873,7 +877,7 @@
             Object.keys(columnHeaderFilters).forEach(key => {
                 const targetCriteria = columnHeaderFilters[key];
                 if (targetCriteria !== 'ALL') {
-                    data = data.filter(item => String(item[key] || 'N/A').trim() === targetCriteria);
+                    data = data.filter(item => String(item[key] || '').trim() === targetCriteria);
                 }
             });
 
@@ -952,7 +956,7 @@
             Object.keys(columnHeaderFilters).forEach(key => {
                 const targetCriteria = columnHeaderFilters[key];
                 if (targetCriteria !== 'ALL') {
-                    data = data.filter(item => String(item[key] || 'N/A').trim() === targetCriteria);
+                    data = data.filter(item => String(item[key] || '').trim() === targetCriteria);
                 }
             });
 
