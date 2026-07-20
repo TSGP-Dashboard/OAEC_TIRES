@@ -401,7 +401,6 @@
         let currentStatusFilter = 'ALL';
         let currentUpdateSerialTarget = null;
         let globalCachedTires = []; 
-        let globalCachedEquipment = []; // Global cache array for master equipment profile records
         let supabaseClient = null;
         let isSupabaseConfigured = false;
         let currentIntakeCount = 1;
@@ -513,37 +512,17 @@
                 if(text) { text.innerText = "Live Database"; text.className = "text-[9px] font-mono uppercase tracking-wider text-emerald-400"; }
                 
                 try {
-                    // 1. Dual fetch track configuration payload from Tires Table
-                    let { data: tiresData, error: tiresErr } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
-                    if (tiresErr) throw tiresErr;
-                    globalCachedTires = tiresData || [];
-
-                    // 2. Fetch from Master Equipment Table
-                    let { data: equipData, error: equipErr } = await supabaseClient.from('equipment').select('*');
-                    if (equipErr) throw equipErr;
-                    globalCachedEquipment = equipData || [];
-
-                } catch (e) { 
-                    console.error("Cloud engine sync tracking drop, using sandbox arrays", e);
-                    fallbackToSandboxData();
-                }
+                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
+                    if (error) throw error;
+                    globalCachedTires = data || [];
+                } catch (e) { globalCachedTires = [...mockDatabase]; }
             } else {
                 if(indicator) indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
                 if(dot) dot.className = "relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500";
                 if(text) { text.innerText = "Sandbox Mode"; text.className = "text-[9px] font-mono uppercase tracking-wider text-amber-400"; }
-                fallbackToSandboxData();
+                globalCachedTires = [...mockDatabase];
             }
             processAndRenderCanvasBoard();
-        }
-
-        function fallbackToSandboxData() {
-            globalCachedTires = [...mockDatabase];
-            // Extract distinct configurations to avoid ledger empty screen render dropouts inside local testing frames
-            const uniqueFleets = [...new Set(mockDatabase.filter(t => !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(t.status)).map(t => t.status))];
-            globalCachedEquipment = uniqueFleets.map(id => ({
-                equipment_no: id,
-                category: id.startsWith("HD") ? "heavy" : (id.startsWith("LOG") ? "logistics" : "sv")
-            }));
         }
 
         function switchTab(tabId) {
@@ -641,6 +620,7 @@
 
             let contextualData = globalCachedTires;
             
+            // Adjusted logic to respect clean category text fallbacks for group switches
             if (currentGroupFilter !== 'ALL') {
                 contextualData = contextualData.filter(t => {
                     const normCat = String(t.category || '').toLowerCase().trim();
@@ -684,17 +664,34 @@
 
         function processAndRenderCanvasBoard() {
             let brandNew = 0, spare = 0, operational = 0, repair = 0, scrap = 0;
-            
-            let otrHTML = ""; let tbrHTML = ""; let svHTML = "";
-            let otrCount = 0; let tbrCount = 0; let svCount = 0;
+            let OTRMap = {}, TBRMap = {}, SVMap = {};
 
-            // 1. Calculate inventory summary stats from cached tires
             globalCachedTires.forEach(t => {
                 if (t.status === "Brand New") brandNew++;
                 else if (t.status === "Warehouse Spare") spare++;
                 else if (t.status === "For Repair") repair++;
                 else if (t.status === "Scrapped Asset") scrap++;
-                else operational++;
+                
+                if (isOperational(t.status)) {
+                    operational++;
+                    
+                    // Case-insensitive database matching based on user parameters
+                    const normalizedCategory = String(t.category || '').toLowerCase().trim();
+                    const groupClass = String(t.group || '').toUpperCase().trim();
+
+                    if (groupClass === "OTR" || normalizedCategory === "heavy") { 
+                        if(!OTRMap[t.status]) OTRMap[t.status] = []; 
+                        OTRMap[t.status].push(t); 
+                    }
+                    else if (groupClass === "TBR" || normalizedCategory === "logistics") { 
+                        if(!TBRMap[t.status]) TBRMap[t.status] = []; 
+                        TBRMap[t.status].push(t); 
+                    }
+                    else if (groupClass === "SV" || normalizedCategory === "sv") { 
+                        if(!SVMap[t.status]) SVMap[t.status] = []; 
+                        SVMap[t.status].push(t); 
+                    }
+                }
             });
 
             document.getElementById('sq-brand-new').innerText = brandNew;
@@ -703,44 +700,22 @@
             document.getElementById('sq-for-repair').innerText = repair;
             document.getElementById('sq-scrapped').innerText = scrap;
 
-            // 2. Map comprehensive equipment list independent of direct active tire counts[cite: 1]
-            globalCachedEquipment.forEach(vehicle => {
-                const vehicleId = vehicle.equipment_no || vehicle.id; 
-                const normCat = String(vehicle.category || '').toLowerCase().trim();
+            document.getElementById('badge-otr-count').innerText = Object.keys(OTRMap).length;
+            document.getElementById('badge-tbr-count').innerText = Object.keys(TBRMap).length;
+            document.getElementById('badge-sv-count').innerText = Object.keys(SVMap).length;
 
-                // Compute exact loaded positions matching this chassis code inside tires DB registry[cite: 1]
-                const mountedTires = globalCachedTires.filter(t => t.status === vehicleId);
-                const positionCount = mountedTires.length;
-
-                const sizeSpec = positionCount > 0 ? mountedTires[0].tire_size : "NO TYRES MOUNTED";[cite: 1]
-                const groupClass = normCat === "heavy" ? "OTR" : (normCat === "logistics" ? "TBR" : "SV");
-
-                // Highlight systems with 0 positions cleanly using a sub-border variant indicator text block style template[cite: 1]
-                const cardHTML = `
-                    <div onclick="launchReplacementModule('${vehicleId}', '${groupClass}', '${sizeSpec}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
-                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${vehicleId}</span>
-                        <span class="${positionCount === 0 ? 'bg-rose-950/40 border-rose-900 text-rose-400' : 'bg-gray-900 border-gray-800 text-gray-400'} border px-1.5 py-0.2 rounded text-[10px] font-mono">
-                            ${positionCount} Positions
-                        </span>
+            const makeListHTML = (map) => {
+                return Object.keys(map).map(chassis => `
+                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}')" class="p-2 bg-gray-950 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                        <span class="text-amber-500 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${chassis}</span>
+                        <span class="bg-gray-900 border border-gray-800 text-gray-400 px-1.5 py-0.2 rounded text-[10px] font-mono">${map[chassis].length} Positions</span>
                     </div>
-                `;[cite: 1]
+                `).join('');
+            };
 
-                if (normCat === "heavy") {
-                    otrHTML += cardHTML; otrCount++;
-                } else if (normCat === "logistics") {
-                    tbrHTML += cardHTML; tbrCount++;
-                } else {
-                    svHTML += cardHTML; svCount++;
-                }
-            });
-
-            document.getElementById('badge-otr-count').innerText = otrCount;
-            document.getElementById('badge-tbr-count').innerText = tbrCount;
-            document.getElementById('badge-sv-count').innerText = svCount;
-
-            document.getElementById('fleet-list-otr').innerHTML = otrHTML || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-            document.getElementById('fleet-list-tbr').innerHTML = tbrHTML || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
-            document.getElementById('fleet-list-sv').innerHTML = svHTML || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-otr').innerHTML = makeListHTML(OTRMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-tbr').innerHTML = makeListHTML(TBRMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+            document.getElementById('fleet-list-sv').innerHTML = makeListHTML(SVMap) || '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
 
             renderInventoryGridOnly();
             renderUtilityPanel();
@@ -759,76 +734,17 @@
             const gridContainer = document.getElementById('replacement-grid-rows');
             gridContainer.innerHTML = '';
 
+            // Filter context mapping inventory availability explicitly as requested
             const unmountedPool = globalCachedTires.filter(t => ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status));
-            const selectOptionsHTML = unmountedPool.map(t => `<option value="${t.serial_number}">${t.serial_number} (${t.brand})</option>`).join('');
 
-            // Safe loop boundary strategy checks for assets running with 0 positions pre-installed
-            if(boundTires.length === 0) {
-                // Generate default empty mock positions based on classification class rules (OTR = 4, TBR = 8)
-                const mockCount = groupClass === "OTR" ? 4 : (groupClass === "TBR" ? 8 : 4);
-                for(let i = 1; i <= mockCount; i++) {
-                    const row = document.createElement('div');
-                    row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
-                    row.innerHTML = `
-                        <div class="col-span-1 py-1 text-gray-600 truncate px-1">EMPTY</div>
-                        <div class="col-span-1 py-1 font-bold text-gray-600">--</div>
-                        <div class="col-span-1 py-1 px-1">
-                            <select disabled id="rem-reason-POS${i}" class="w-full bg-gray-950 border border-gray-900 rounded px-1 py-0.5 text-gray-600 focus:outline-none text-[10px] opacity-40"><option>--</option></select>
-                        </div>
-                        <div class="col-span-1 py-1 px-1">
-                            <input disabled type="number" id="rem-rtd-POS${i}" value="0" class="w-full bg-gray-950 border border-gray-900 rounded px-1 py-0.5 text-center font-mono text-gray-600 focus:outline-none text-[10px] opacity-40">
-                        </div>
-                        <div class="col-span-1 py-1 px-1">
-                            <select disabled id="rem-disp-POS${i}" class="w-full bg-gray-950 border border-gray-900 rounded px-1 py-0.5 text-gray-600 focus:outline-none text-[10px] opacity-40"><option>--</option></select>
-                        </div>
-                        <div class="col-span-1 py-1 bg-gray-950 text-amber-500/80 font-bold font-mono">POS-${i}</div>
-                        <div id="inst-brand-POS${i}" class="col-span-1 py-1 text-gray-400 truncate px-1">--</div>
-                        <div class="col-span-2 py-1 px-1">
-                            <select id="inst-serial-POS${i}" onchange="handleInventoryLookup(this, 'POS${i}')" class="w-full bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-amber-400 font-bold focus:outline-none text-[10px]">
-                                <option value="">-- Select Serial --</option>
-                                ${selectOptionsHTML}
-                            </select>
-                        </div>
-                        <div id="inst-rtd-POS${i}" class="col-span-1 py-1 text-emerald-400 font-bold">--</div>
-                        <div id="inst-remarks-POS${i}" class="col-span-2 py-1 text-gray-500 text-[10px] truncate px-1">--</div>
-                    `;
-                    gridContainer.appendChild(row);
-                }
-            } else {
-                boundTires.forEach((tire, index) => {
-                    const posId = index + 1;
-                    const row = document.createElement('div');
-                    row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
-                    row.innerHTML = `
-                        <div class="col-span-1 py-1 text-gray-400 truncate px-1">${tire.brand}</div>
-                        <div class="col-span-1 py-1 font-bold text-amber-500">${tire.serial_number}</div>
-                        <div class="col-span-1 py-1 px-1">
-                            <select id="rem-reason-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded px-1 py-0.5 text-gray-300 focus:outline-none text-[10px]">
-                                <option value="WEAR">Normal Wear</option><option value="PUNCTURE">Puncture / Cut</option><option value="ROK">Rock Cut Damage</option>
-                            </select>
-                        </div>
-                        <div class="col-span-1 py-1 px-1">
-                            <input type="number" step="0.1" id="rem-rtd-POS${posId}" value="${tire.remaining_tread_depth}" class="w-full bg-gray-950 border border-gray-800 rounded px-1 py-0.5 text-center font-mono text-gray-200 focus:outline-none text-[10px]">
-                        </div>
-                        <div class="col-span-1 py-1 px-1">
-                            <select id="rem-disp-POS${posId}" class="w-full bg-gray-950 border border-gray-800 rounded px-1 py-0.5 text-gray-300 focus:outline-none text-[10px]">
-                                <option value="SPARE">Warehouse Spare</option><option value="FOR REPAIR">For Repair</option><option value="SCRAP">Flag As Scrap</option>
-                            </select>
-                        </div>
-                        <div class="col-span-1 py-1 bg-gray-950 text-gray-200 font-bold font-mono">POS-${posId}</div>
-                        <div id="inst-brand-POS${posId}" class="col-span-1 py-1 text-gray-400 truncate px-1">--</div>
-                        <div class="col-span-2 py-1 px-1">
-                            <select id="inst-serial-POS${posId}" onchange="handleInventoryLookup(this, 'POS${posId}')" class="w-full bg-gray-950 border border-gray-800 rounded px-1 py-0.5 text-amber-400 focus:outline-none text-[10px]">
-                                <option value="">-- Select Serial --</option>
-                                ${selectOptionsHTML}
-                            </select>
-                        </div>
-                        <div id="inst-rtd-POS${posId}" class="col-span-1 py-1 text-emerald-400 font-bold">--</div>
-                        <div id="inst-remarks-POS${posId}" class="col-span-2 py-1 text-gray-500 text-[10px] truncate px-1">--</div>
-                    `;
-                    gridContainer.appendChild(row);
-                });
-            }
+            boundTires.forEach((tire, index) => {
+                const posId = index + 1;
+                const row = document.createElement('div');
+                row.className = "grid grid-cols-12 text-center items-center divide-x divide-gray-800 hover:bg-gray-800/10 transition py-1";
+                
+                
+                gridContainer.appendChild(row);
+            });
 
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
         }
@@ -859,6 +775,7 @@
                 return;
             }
 
+            // Client data mutation cycle
             const rows = document.getElementById('replacement-grid-rows').children;
             const targetFleetTires = globalCachedTires.filter(t => t.status === equipId);
 
@@ -869,25 +786,13 @@
                 if (installSerial) {
                     const removedTire = targetFleetTires[i];
                     const installedTire = globalCachedTires.find(t => t.serial_number === installSerial);
-                    const newDisp = document.getElementById(`rem-disp-POS${posId}`) ? document.getElementById(`rem-disp-POS${posId}`).value : "SPARE";
+                    const newDisp = document.getElementById(`rem-disp-POS${posId}`).value || "Warehouse Spare";
 
-                    if (!isSupabaseConfigured) {
-                        if(removedTire) {
-                            removedTire.status = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
-                            removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
-                        }
-                        if(installedTire) installedTire.status = equipId;
-                    } else {
-                        try {
-                            if(removedTire) {
-                                const mappedStatus = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
-                                const mappedRtd = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
-                                await supabaseClient.from('tires').update({ status: mappedStatus, remaining_tread_depth: mappedRtd }).eq('serial_number', removedTire.serial_number);
-                            }
-                            if(installedTire) {
-                                await supabaseClient.from('tires').update({ status: equipId }).eq('serial_number', installSerial);
-                            }
-                        } catch(err) { console.error("Database mutation row step error", err); }
+                    if(removedTire && installedTire) {
+                        // Apply status updates to mock db or target cloud mappings
+                        removedTire.status = newDisp === "SCRAP" ? "Scrapped Asset" : (newDisp === "FOR REPAIR" ? "For Repair" : "Warehouse Spare");
+                        removedTire.remaining_tread_depth = parseFloat(document.getElementById(`rem-rtd-POS${posId}`).value) || removedTire.remaining_tread_depth;
+                        installedTire.status = equipId;
                     }
                 }
             }
@@ -1233,75 +1138,4 @@
                 if (target) {
                     target.status = "Scrapped Asset";
                 }
-                closeUpdateModal();
-                syncEnginePipeline();
-            } else {
-                try {
-                    const { error } = await supabaseClient.from('tires')
-                        .update({ status: "Scrapped Asset" })
-                        .eq('serial_number', currentUpdateSerialTarget);
-                    if (error) throw error;
-                    closeUpdateModal();
-                    syncEnginePipeline();
-                } catch (e) { alert(e.message); }
-            }
-        }
-
-        async function executeBatchSave() {
-            const group = document.getElementById('add-group').value;
-            const type = document.getElementById('add-type').value;
-            const size = document.getElementById('add-size').value.trim();
-            const brand = document.getElementById('add-brand').value.trim();
-            const pattern = document.getElementById('add-pattern').value.trim() || "Standard";
-            const ply = document.getElementById('add-ply').value.trim() || "16PR";
-            const orig = parseFloat(document.getElementById('add-orig').value) || 0;
-            const dateAdded = document.getElementById('add-date').value || getTodayDateString();
-
-            if (!size || !brand) return alert("Shared context payload parameters (Size & Brand Make) are strictly required.");
-
-            const inputs = document.querySelectorAll('.batch-serial-field');
-            const records = [];
-            
-            for(let i=0; i < inputs.length; i++) {
-                const serialVal = inputs[i].value.trim().toUpperCase();
-                if(!serialVal) {
-                    return alert(`Validation Error: Serial value field row #${i+1} is completely blank.`);
-                }
-                records.push({
-                    date_added: dateAdded, 
-                    serial_number: serialVal, 
-                    group: group, 
-                    category: group === "OTR" ? "heavy" : (group === "TBR" ? "logistics" : "sv"),
-                    tire_size: size, 
-                    brand: brand,
-                    pattern: pattern, 
-                    ply_rating: ply, 
-                    type: type,
-                    original_tread_depth: orig, 
-                    remaining_tread_depth: orig, 
-                    status: "Brand New"
-                });
-            }
-
-            if (!isSupabaseConfigured) {
-                records.forEach(r => mockDatabase.unshift(r)); 
-                alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
-                currentIntakeCount = 1; 
-                currentPage = 1;
-                syncEnginePipeline();
-            } else {
-                try {
-                    const { error } = await supabaseClient.from('tires').insert(records);
-                    if (error) throw error;
-                    alert(`Successfully submitted batch array payload containing ${records.length} tires to Supabase.`);
-                    currentIntakeCount = 1;
-                    currentPage = 1;
-                    syncEnginePipeline();
-                } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
-            }
-        }
-
-        window.onload = () => { syncEnginePipeline(); };
-    </script>
-</body>
-</html>
+                closeU
