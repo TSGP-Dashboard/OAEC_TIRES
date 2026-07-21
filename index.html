@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TIRE TRACKING SYSTEM</title>
+    <title>Tyre-Track Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -36,8 +36,8 @@
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-circle-nodes text-blue-600 text-lg"></i>
                 <div>
-                    <h1 class="text-sm font-bold tracking-tight text-gray-800">TYRE TRACKING SYSTEM</h1>
-                    <p class="text-[10px] text-gray-500">OAEC Tires</p>
+                    <h1 class="text-sm font-bold tracking-tight text-gray-800">Tyre-Track Pro</h1>
+                    <p class="text-[10px] text-gray-500">Technical Inventory System</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2 bg-gray-50 px-2 py-1 rounded border border-gray-200">
@@ -258,7 +258,7 @@
                         <div class="divide-y divide-gray-800 border-r border-gray-200">
                             <div class="grid grid-cols-3 items-center">
                                 <div class="bg-black/20 p-2 font-semibold text-gray-500 border-r border-gray-200 h-full flex items-center">DATE:</div>
-                                <div class="col-span-2 p-2 font-mono text-gray-600 text-xs font-bold" id="replace-header-date">2026-07-18</div>
+                                <input type="date" id="replace-header-date" class="col-span-2 p-2 font-mono text-gray-600 text-xs font-bold bg-white border-b border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-400">
                             </div>
                             <div class="grid grid-cols-3 items-center">
                                 <div class="bg-black/20 p-2 font-semibold text-gray-500 border-r border-gray-200 h-full flex items-center">EQUIPMENT NO.</div>
@@ -532,7 +532,7 @@
             
             console.log("Loading equipment from Supabase...");
             
-            let { data, error } = await supabaseClient.from('equipment').select('*');
+            let { data, error } = await supabaseClient.from('equipment').select('equipment_num, category, total_tires');
             
             if (error) {
                 console.log("Equipment fetch returned an error");
@@ -567,9 +567,10 @@
                 if (equipList.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
                 return equipList.map(eq => {
                     const equipNum = eq.equipment_num || 'N/A';
-                    return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '')" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                    const tireCount = eq.total_tires || 0;
+                    return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '', ${tireCount})" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-300 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
                         <span class="text-blue-600 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
-                        <span class="bg-gray-50 border border-gray-200 text-gray-500 px-1.5 py-0.2 rounded text-[10px] font-mono">${globalCachedTires.filter(t => t.status === equipNum).length} Tires</span>
+                        <span class="bg-gray-50 border border-gray-200 text-gray-600 px-1.5 py-0.2 rounded text-[10px] font-mono">${tireCount} Tires</span>
                     </div>`;
                 }).join('');
             };
@@ -764,7 +765,7 @@
 
             const makeListHTML = (map) => {
                 return Object.keys(map).map(chassis => `
-                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}')" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-500/50 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                    <div onclick="launchReplacementModule('${chassis}', '${map[chassis][0].group}', '${map[chassis][0].tire_size}', 0)" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-300 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
                         <span class="text-blue-600 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${chassis}</span>
                         <span class="bg-gray-50 border border-gray-200 text-gray-500 px-1.5 py-0.2 rounded text-[10px] font-mono">${map[chassis].length} Positions</span>
                     </div>
@@ -779,14 +780,131 @@
             renderUtilityPanel();
         }
 
-        function launchReplacementModule(chassisId, groupClass, sizeSpec) {
+        function showAddTiresModal(equipmentNum) {
+            // Show available tires from inventory and let user select which ones to install
+            const availableTires = globalCachedTires.filter(t => 
+                ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status)
+            );
+            
+            if (availableTires.length === 0) {
+                alert("❌ No available tires in inventory to install");
+                return;
+            }
+            
+            // Create a list to select from
+            let tireList = availableTires.map((t, i) => `${i + 1}. ${t.serial_number} (${t.brand} - ${t.status})`).join('\n');
+            const selectedIndex = prompt(`Select tire number to install on ${equipmentNum}:\n\n${tireList}`, '1');
+            
+            if (selectedIndex && !isNaN(selectedIndex) && selectedIndex > 0 && selectedIndex <= availableTires.length) {
+                const tireToInstall = availableTires[parseInt(selectedIndex) - 1];
+                installTireOnEquipment(equipmentNum, tireToInstall.serial_number);
+            }
+        }
+        
+        function showUpdateTiresModal(equipmentNum) {
+            // Show installed tires and let user update their status
+            const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
+            
+            if (installedTires.length === 0) {
+                alert("❌ No tires installed on this equipment yet");
+                return;
+            }
+            
+            let tireList = installedTires.map((t, i) => `${i + 1}. ${t.serial_number} (${t.tire_size})`).join('\n');
+            const selectedIndex = prompt(`Select tire to update status:\n\n${tireList}`, '1');
+            
+            if (selectedIndex && !isNaN(selectedIndex) && selectedIndex > 0 && selectedIndex <= installedTires.length) {
+                const tireToUpdate = installedTires[parseInt(selectedIndex) - 1];
+                updateTireStatus(tireToUpdate.serial_number);
+            }
+        }
+        
+        async function installTireOnEquipment(equipmentNum, serialNumber) {
+            if (!isSupabaseConfigured) {
+                alert("Supabase not configured");
+                return;
+            }
+            
+            try {
+                // Update tire's status to equipment number (linking it)
+                let { error } = await supabaseClient
+                    .from('tires')
+                    .update({ status: equipmentNum })
+                    .eq('serial_number', serialNumber);
+                
+                if (error) throw error;
+                
+                alert(`✅ Tire ${serialNumber} installed on ${equipmentNum}`);
+                
+                // Reload and refresh
+                await syncEnginePipeline();
+                await loadEquipmentForFleet();
+                launchReplacementModule(equipmentNum, '', '');
+            } catch (e) {
+                alert(`❌ Error: ${e.message || 'Unknown error'}`);
+            }
+        }
+        
+        async function updateTireStatus(serialNumber) {
+            const newStatus = prompt("Select new tire status:\n1. Brand New\n2. Operational\n3. For Repair\n4. Warehouse Spare\n5. Scrapped Asset\n\nEnter number (1-5):", '1');
+            
+            const statusMap = {
+                '1': 'Brand New',
+                '2': 'Operational',
+                '3': 'For Repair',
+                '4': 'Warehouse Spare',
+                '5': 'Scrapped Asset'
+            };
+            
+            const selectedStatus = statusMap[newStatus];
+            if (!selectedStatus) {
+                alert("Invalid selection");
+                return;
+            }
+            
+            if (!isSupabaseConfigured) {
+                alert("Supabase not configured");
+                return;
+            }
+            
+            try {
+                let { error } = await supabaseClient
+                    .from('tires')
+                    .update({ status: selectedStatus })
+                    .eq('serial_number', serialNumber);
+                
+                if (error) throw error;
+                
+                alert(`✅ Tire ${serialNumber} status updated to: ${selectedStatus}`);
+                
+                // Reload
+                await syncEnginePipeline();
+            } catch (e) {
+                alert(`❌ Error: ${e.message || 'Unknown error'}`);
+            }
+        }
+
+        function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
             document.getElementById('fleet-unselected-placeholder').classList.add('hidden');
             
             document.getElementById('replace-header-equip-id').innerText = chassisId;
             document.getElementById('replace-header-equip-size').innerText = sizeSpec || "N/A SPEC";
             document.getElementById('replace-header-wo-id').innerText = `WO-${chassisId}-${Math.floor(1000 + Math.random() * 9000)}`;
-            document.getElementById('replace-header-date').innerText = getTodayDateString();
+            document.getElementById('replace-header-date').value = getTodayDateString();
             document.getElementById('replace-input-odometer').value = '';
+            
+            // Display tire count from equipment table
+            const tireCountDisplay = tireCount || 0;
+            const installedCount = globalCachedTires.filter(t => t.status === chassisId).length;
+            let tireCountElement = document.getElementById('tire-count-display');
+            if (!tireCountElement) {
+                // Create it if it doesn't exist
+                tireCountElement = document.createElement('div');
+                tireCountElement.id = 'tire-count-display';
+                tireCountElement.className = "flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded p-2 text-[11px]";
+                document.getElementById('replace-header-equip-id').parentElement.after(tireCountElement);
+            }
+            tireCountElement.innerHTML = `<i class="fa-solid fa-wheels text-blue-600"></i><span class="font-bold text-blue-600">Tires: ${installedCount}/${tireCountDisplay}</span><button onclick="showAddTiresModal('${chassisId}')" class="ml-auto px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold hover:bg-green-700">+ Install</button><button onclick="showUpdateTiresModal('${chassisId}')" class="px-2 py-1 bg-orange-600 text-white rounded text-[10px] font-bold hover:bg-orange-700">⟳ Update</button>`;
 
             const boundTires = globalCachedTires.filter(t => t.status === chassisId);
             const gridContainer = document.getElementById('replacement-grid-rows');
