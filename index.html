@@ -1099,7 +1099,16 @@
             }
         }
 
-        function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
+        async function refreshTireCache() {
+            if (isSupabaseConfigured) {
+                try {
+                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
+                    if (!error && data) globalCachedTires = data;
+                } catch (e) {}
+            }
+        }
+
+        async function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
             document.getElementById('fleet-unselected-placeholder').classList.add('hidden');
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
             
@@ -1109,6 +1118,8 @@
             document.getElementById('active-equip-num').innerText = chassisId;
             document.getElementById('active-tire-capacity').innerText = tireCount || 0;
             
+            // Refresh cache from DB to ensure latest data
+            await refreshTireCache();
             renderActiveTiresTable(chassisId, tireCount);
         }
         
