@@ -162,6 +162,10 @@
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Export Excel</span>
                             </button>
+                            <button onclick="openDBManager()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition shadow border border-rose-600/30">
+                                <i class="fa-solid fa-database"></i>
+                                <span>Manage DB</span>
+                            </button>
                             <span id="inventory-counter-badge" class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 font-mono">0 Items Found</span>
                         </div>
                     </div>
@@ -389,6 +393,44 @@
 
         </div>
     </main>
+
+    <!-- DATABASE MANAGER MODAL -->
+    <div id="db-manager-modal" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-gray-50 border border-gray-200 w-full max-w-5xl rounded-lg shadow-2xl overflow-hidden text-xs max-h-[90vh] flex flex-col">
+            <div class="px-3 py-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+                <span class="font-bold flex items-center gap-1"><i class="fa-solid fa-database text-rose-600"></i> Database Manager</span>
+                <button onclick="closeDBManager()" class="text-gray-500 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-3 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span id="db-count-badge" class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-mono text-[10px]">0 records</span>
+                    <span id="db-mode-badge" class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded font-mono text-[10px]">Sandbox</span>
+                </div>
+                <div class="flex gap-1.5">
+                    <button onclick="refreshDBManager()" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] font-medium"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
+                    <button onclick="clearAllRecords()" class="bg-rose-700 hover:bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-medium"><i class="fa-solid fa-trash-can mr-1"></i>Clear All</button>
+                </div>
+            </div>
+            <div class="overflow-y-auto flex-1 p-2">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0 bg-gray-50">
+                            <th class="p-1.5 font-semibold">#</th>
+                            <th class="p-1.5 font-semibold">Serial</th>
+                            <th class="p-1.5 font-semibold">Group</th>
+                            <th class="p-1.5 font-semibold">Brand</th>
+                            <th class="p-1.5 font-semibold">Size</th>
+                            <th class="p-1.5 font-semibold">RTD</th>
+                            <th class="p-1.5 font-semibold">Status</th>
+                            <th class="p-1.5 font-semibold">Hrs/KM</th>
+                            <th class="p-1.5 font-semibold text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="db-manager-tbody" class="divide-y divide-gray-200 font-mono text-[11px]"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <!-- RECORD EDIT/UPDATE MODAL DIALOG -->
     <div id="record-update-modal" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
@@ -1601,6 +1643,99 @@
         function changePage(direction) {
             currentPage += direction;
             renderInventoryGridOnly();
+        }
+
+        // ===== DATABASE MANAGER =====
+        function openDBManager() {
+            document.getElementById('db-manager-modal').classList.remove('hidden');
+            refreshDBManager();
+        }
+
+        function closeDBManager() {
+            document.getElementById('db-manager-modal').classList.add('hidden');
+        }
+
+        function refreshDBManager() {
+            const tbody = document.getElementById('db-manager-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const data = globalCachedTires;
+            document.getElementById('db-count-badge').innerText = `${data.length} records`;
+            document.getElementById('db-mode-badge').innerText = isSupabaseConfigured ? 'Live DB' : 'Sandbox';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-gray-500 font-sans">No records in database.</td></tr>';
+                return;
+            }
+
+            data.forEach((t, idx) => {
+                const hrsInfo = cachedServiceHours[t.serial_number];
+                const hrsDisp = hrsInfo && hrsInfo.totalHours > 0 ? hrsInfo.totalHours.toFixed(0) + 'h' : (hrsInfo && hrsInfo.totalHours === 0 && hrsInfo.cycles === 0 ? 'In Svc' : '--');
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-100/60";
+                row.innerHTML = `
+                    <td class="p-1.5 text-gray-400 text-[10px]">${idx + 1}</td>
+                    <td class="p-1.5 font-bold text-blue-600">${t.serial_number}</td>
+                    <td class="p-1.5 text-gray-500">${t.group || '-'}</td>
+                    <td class="p-1.5 text-gray-500">${t.brand || '-'}</td>
+                    <td class="p-1.5 text-gray-500 text-[10px]">${t.tire_size || '-'}</td>
+                    <td class="p-1.5 text-gray-600">${t.remaining_tread_depth != null ? Number(t.remaining_tread_depth).toFixed(1) : '-'}</td>
+                    <td class="p-1.5">${t.status || '-'}</td>
+                    <td class="p-1.5 text-gray-500 font-mono">${hrsDisp}</td>
+                    <td class="p-1.5 text-center">
+                        <button onclick="deleteRecord('${t.serial_number}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded border border-rose-300 text-[10px]">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function deleteRecord(serial) {
+            if (!confirm(`Delete tire ${serial}? This cannot be undone.`)) return;
+            if (!isSupabaseConfigured) {
+                const idx = mockDatabase.findIndex(t => t.serial_number === serial);
+                if (idx >= 0) mockDatabase.splice(idx, 1);
+                syncEnginePipeline();
+                refreshDBManager();
+            } else {
+                try {
+                    // Delete from both tables
+                    await supabaseClient.from('tire_events').delete().eq('serial_number', serial);
+                    let { error } = await supabaseClient.from('tires').delete().eq('serial_number', serial);
+                    if (error) throw error;
+                    syncEnginePipeline();
+                    refreshDBManager();
+                } catch (e) { alert(`Delete failed: ${e.message}`); }
+            }
+        }
+
+        async function clearAllRecords() {
+            const count = globalCachedTires.length;
+            if (count === 0) return alert("No records to delete.");
+            if (!confirm(`DELETE ALL ${count} records? This CANNOT be undone. Are you sure?`)) return;
+            if (!confirm(`⚠️ FINAL WARNING: This will permanently remove all ${count} tire records. Proceed?`)) return;
+
+            if (!isSupabaseConfigured) {
+                mockDatabase.length = 0;
+                mockTireEvents.length = 0;
+                cachedServiceHours = {};
+                syncEnginePipeline();
+                refreshDBManager();
+                closeDBManager();
+            } else {
+                try {
+                    await supabaseClient.from('tire_events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                    let { error } = await supabaseClient.from('tires').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                    if (error) throw error;
+                    cachedServiceHours = {};
+                    syncEnginePipeline();
+                    refreshDBManager();
+                    closeDBManager();
+                } catch (e) { alert(`Clear failed: ${e.message}`); }
+            }
         }
 
         function exportToExcel() {
