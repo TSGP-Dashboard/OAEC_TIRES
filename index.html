@@ -1334,7 +1334,7 @@
                         });
                         applyRemovalToMockDb(ctx.currentTire.serial_number, newStatus, removalRTD);
                     } else {
-                        await supabaseClient
+                        let { error: removalEventErr } = await supabaseClient
                             .from('tire_events')
                             .insert([{
                                 serial_number: ctx.currentTire.serial_number,
@@ -1350,7 +1350,8 @@
                                 total_hours_km_used: totalHoursKmUsed,
                                 remarks: remarks || null
                             }]);
-                        await supabaseClient
+                        if (removalEventErr) throw removalEventErr;
+                        let { error: removalTireErr } = await supabaseClient
                             .from('tires')
                             .update({ status: newStatus, remaining_tread_depth: removalRTD })
                             .eq('serial_number', ctx.currentTire.serial_number);
@@ -1376,7 +1377,7 @@
                         });
                         applyInstallToMockDb(installSerial, ctx.equipmentNum, ctx.position, remarks);
                     } else {
-                        await supabaseClient
+                        let { error: eventErr } = await supabaseClient
                             .from('tire_events')
                             .insert([{
                                 serial_number: installSerial,
@@ -1389,10 +1390,12 @@
                                 smr_odometer: odometer,
                                 remarks: remarks || null
                             }]);
-                        await supabaseClient
+                        if (eventErr) throw eventErr;
+                        let { error: tireErr } = await supabaseClient
                             .from('tires')
                             .update({ status: ctx.equipmentNum, tire_position: ctx.position, remarks: remarks })
                             .eq('serial_number', installSerial);
+                        if (tireErr) throw tireErr;
                     }
                 }
                 
