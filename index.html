@@ -127,14 +127,6 @@
                     </div>
                 </div>
 
-                <!-- Brand Performance Section -->
-                <div id="brand-performance-section" class="bg-gray-50 border border-gray-200 rounded-lg p-2">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-600"><i class="fa-solid fa-chart-simple mr-1 text-blue-600"></i>Tire Brand Performance (Avg Hrs/KM per Tire)</span>
-                    </div>
-                    <div id="brand-performance-container" class="flex flex-wrap gap-2"></div>
-                </div>
-
                 <!-- Capsule Group Filters Bar -->
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-center gap-1.5">
                     <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-1">Group Class:</span>
@@ -161,10 +153,6 @@
                             <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition shadow border border-emerald-600/30">
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Export Excel</span>
-                            </button>
-                            <button onclick="openDBManager()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium text-[10px] px-2 py-1 rounded flex items-center space-x-1.5 transition shadow border border-rose-600/30">
-                                <i class="fa-solid fa-database"></i>
-                                <span>Manage DB</span>
                             </button>
                             <span id="inventory-counter-badge" class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded border border-gray-200 font-mono">0 Items Found</span>
                         </div>
@@ -219,7 +207,6 @@
                                     </th>
                                     <th class="p-2 font-semibold text-left">OTD</th>
                                     <th class="p-2 font-semibold text-left">RTD</th>
-                                    <th class="p-2 font-semibold text-left">Total Hrs/KM</th>
                                     <th class="p-2 font-semibold text-left">Status</th>
                                     <th class="p-2 font-semibold text-center">Data Controls</th>
                                 </tr>
@@ -394,44 +381,6 @@
         </div>
     </main>
 
-    <!-- DATABASE MANAGER MODAL -->
-    <div id="db-manager-modal" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-gray-50 border border-gray-200 w-full max-w-5xl rounded-lg shadow-2xl overflow-hidden text-xs max-h-[90vh] flex flex-col">
-            <div class="px-3 py-2 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
-                <span class="font-bold flex items-center gap-1"><i class="fa-solid fa-database text-rose-600"></i> Database Manager</span>
-                <button onclick="closeDBManager()" class="text-gray-500 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-3 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <span id="db-count-badge" class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-mono text-[10px]">0 records</span>
-                    <span id="db-mode-badge" class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded font-mono text-[10px]">Sandbox</span>
-                </div>
-                <div class="flex gap-1.5">
-                    <button onclick="refreshDBManager()" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] font-medium"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
-                    <button onclick="clearAllRecords()" class="bg-rose-700 hover:bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-medium"><i class="fa-solid fa-trash-can mr-1"></i>Clear All</button>
-                </div>
-            </div>
-            <div class="overflow-y-auto flex-1 p-2">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0 bg-gray-50">
-                            <th class="p-1.5 font-semibold">#</th>
-                            <th class="p-1.5 font-semibold">Serial</th>
-                            <th class="p-1.5 font-semibold">Group</th>
-                            <th class="p-1.5 font-semibold">Brand</th>
-                            <th class="p-1.5 font-semibold">Size</th>
-                            <th class="p-1.5 font-semibold">RTD</th>
-                            <th class="p-1.5 font-semibold">Status</th>
-                            <th class="p-1.5 font-semibold">Hrs/KM</th>
-                            <th class="p-1.5 font-semibold text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="db-manager-tbody" class="divide-y divide-gray-200 font-mono text-[11px]"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- RECORD EDIT/UPDATE MODAL DIALOG -->
     <div id="record-update-modal" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-gray-50 border border-gray-200 w-full max-w-md rounded-lg shadow-2xl overflow-hidden text-xs">
@@ -495,11 +444,9 @@
         const SUPABASE_URL = "https://fmkwpgwhkmxcbhiepiui.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta3dwZ3doa214Y2JoaWVwaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMzMxNzgsImV4cCI6MjA5OTgwOTE3OH0.OZ7ZduWZ0GIM-5zD5o-QNNwx0AfKYEeIvdQYMsEq5u4";
 
-        let mockDatabase = [];
         let activeTab = 'inventory';
         let currentGroupFilter = 'ALL';
         let currentStatusFilter = 'ALL';
-        let currentUpdateSerialTarget = null;
         let globalCachedTires = []; 
         let supabaseClient = null;
         let isSupabaseConfigured = false;
@@ -525,160 +472,6 @@
             return d.toISOString().split('T')[0];
         }
 
-        function bootstrapMockDatabase() {
-            const groups = ["OTR", "TBR", "SV"];
-            const brands = ["Michelin", "Bridgestone", "Goodyear", "Continental"];
-            const statusPool = ["Brand New", "Repaired", "Warehouse Spare", "For Repair", "For Rotation", "For Evaluation", "Scrapped Asset"];
-            const specs = {
-                "OTR": { size: "45/65R45", pattern: "A4", ply: "58PR", orig: 28.0, type: "Tubeless" },
-                "TBR": { size: "295/80R22.5", pattern: "PW825+", ply: "16PR", orig: 24.0, type: "Tubeless" },
-                "SV": { size: "265/70R17", pattern: "Standard Road", ply: "10PR", orig: 14.5, type: "Tube Type" }
-            };
-
-            // Setup mock equipment vehicles with deterministic tires
-            const mockFleets = {
-                "OTR": ["HD-TRK01", "HD-TRK02", "HD-TRK03"],
-                "TBR": ["LOG-TRN01", "LOG-TRN02", "LOG-TRN03"],
-                "SV": ["SUP-VAN01", "SUP-VAN02"]
-            };
-
-            // Inject tires pre-mounted to fleets
-            Object.keys(mockFleets).forEach(grp => {
-                const spec = specs[grp];
-                mockFleets[grp].forEach(equip => {
-                    const totalPositions = grp === "OTR" ? 4 : grp === "TBR" ? 8 : 4;
-                    for(let p = 1; p <= totalPositions; p++) {
-                        mockDatabase.push({
-                            date_added: getTodayDateString(),
-                            serial_number: `TR-${Math.floor(21000 + Math.random() * 68000)}`,
-                            group: grp,
-                            category: grp === "OTR" ? "heavy" : (grp === "TBR" ? "logistics" : "sv"),
-                            tire_size: spec.size,
-                            brand: brands[Math.floor(Math.random() * brands.length)],
-                            pattern: spec.pattern,
-                            ply_rating: spec.ply,
-                            type: spec.type,
-                            original_tread_depth: spec.orig,
-                            remaining_tread_depth: parseFloat((Math.random() * (spec.orig - 6) + 5).toFixed(1)),
-                            status: equip
-                        });
-                    }
-                });
-            });
-
-            // Generative spare inventory items
-            for (let i = 1; i <= 25; i++) {
-                const group = groups[Math.floor(Math.random() * groups.length)];
-                const spec = specs[group];
-                const brand = brands[Math.floor(Math.random() * brands.length)];
-                let currentStatus = statusPool[Math.floor(Math.random() * statusPool.length)];
-                let remTread = parseFloat((Math.random() * (spec.orig - 3) + 3).toFixed(1));
-
-                if (currentStatus === "Brand New") remTread = spec.orig;
-
-                mockDatabase.push({
-                    date_added: getTodayDateString(),
-                    serial_number: `TR-${Math.floor(21000 + Math.random() * 68000)}`,
-                    group: group,
-                    category: group === "OTR" ? "heavy" : (group === "TBR" ? "logistics" : "sv"),
-                    tire_size: spec.size,
-                    brand: brand,
-                    pattern: spec.pattern,
-                    ply_rating: spec.ply,
-                    type: spec.type,
-                    original_tread_depth: spec.orig,
-                    remaining_tread_depth: remTread,
-                    status: currentStatus
-                });
-            }
-        }
-        bootstrapMockDatabase();
-
-        // ===== TIRE SERVICE HOURS TRACKING =====
-        let mockTireEvents = [];
-
-        function initializeMockEvents() {
-            const now = new Date();
-            // Generate synthetic events for operational tires (status == chassis id)
-            mockDatabase.forEach(tire => {
-                if (isOperational(tire.status)) {
-                    const installDate = new Date(now);
-                    installDate.setDate(installDate.getDate() - Math.floor(30 + Math.random() * 60));
-                    const installOdo = Math.floor(1000 + Math.random() * 5000);
-                    mockTireEvents.push({
-                        serial_number: tire.serial_number,
-                        event_type: 'INSTALLED',
-                        date: installDate.toISOString().split('T')[0],
-                        equipment_num: tire.status,
-                        tire_position: 1,
-                        previous_status: 'Warehouse Spare',
-                        work_order_id: `WO-${tire.status}-${Math.floor(1000 + Math.random() * 9000)}`,
-                        smr_odometer: installOdo,
-                        remarks: 'Initial installation'
-                    });
-                    if (Math.random() < 0.2) {
-                        const removalDate = new Date(installDate);
-                        removalDate.setDate(removalDate.getDate() + Math.floor(15 + Math.random() * 30));
-                        const removalOdo = installOdo + Math.floor(500 + Math.random() * 3000);
-                        mockTireEvents.push({
-                            serial_number: tire.serial_number,
-                            event_type: 'REMOVED',
-                            date: removalDate.toISOString().split('T')[0],
-                            equipment_num: tire.status,
-                            tire_position: 1,
-                            removal_reason: 'WORN-OUT',
-                            disposition: 'FOR REPAIR',
-                            remaining_tread_depth: tire.remaining_tread_depth,
-                            work_order_id: `WO-${tire.status}-${Math.floor(1000 + Math.random() * 9000)}`,
-                            smr_odometer: removalOdo,
-                            remarks: 'Scheduled removal'
-                        });
-                        const reinstallDate = new Date(removalDate);
-                        reinstallDate.setDate(reinstallDate.getDate() + 3);
-                        mockTireEvents.push({
-                            serial_number: tire.serial_number,
-                            event_type: 'INSTALLED',
-                            date: reinstallDate.toISOString().split('T')[0],
-                            equipment_num: tire.status,
-                            tire_position: 1,
-                            previous_status: 'For Repair',
-                            work_order_id: `WO-${tire.status}-${Math.floor(1000 + Math.random() * 9000)}`,
-                            smr_odometer: removalOdo,
-                            remarks: 'Re-installed after repair'
-                        });
-                    }
-                }
-            });
-            mockDatabase.filter(t => t.status === 'Scrapped Asset').forEach(tire => {
-                const installOdo = Math.floor(500 + Math.random() * 3000);
-                const serviceHrs = Math.floor(2000 + Math.random() * 8000);
-                mockTireEvents.push({
-                    serial_number: tire.serial_number,
-                    event_type: 'INSTALLED',
-                    date: getTodayDateString(),
-                    equipment_num: 'UNKNOWN',
-                    tire_position: 1,
-                    previous_status: 'Brand New',
-                    work_order_id: `WO-SCRAP-${Math.floor(1000 + Math.random() * 9000)}`,
-                    smr_odometer: installOdo,
-                    remarks: 'Initial install'
-                });
-                mockTireEvents.push({
-                    serial_number: tire.serial_number,
-                    event_type: 'REMOVED',
-                    date: getTodayDateString(),
-                    equipment_num: 'UNKNOWN',
-                    tire_position: 1,
-                    removal_reason: 'WORN-OUT',
-                    disposition: 'SCRAP',
-                    remaining_tread_depth: tire.remaining_tread_depth,
-                    work_order_id: `WO-SCRAP-${Math.floor(1000 + Math.random() * 9000)}`,
-                    smr_odometer: installOdo + serviceHrs,
-                    remarks: 'End of life'
-                });
-            });
-        }
-        initializeMockEvents();
 
         try {
             if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
@@ -701,14 +494,13 @@
                     let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
                     if (error) throw error;
                     globalCachedTires = data || [];
-                } catch (e) { globalCachedTires = [...mockDatabase]; }
+                } catch (e) { globalCachedTires = []; }
             } else {
                 if(indicator) indicator.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75";
                 if(dot) dot.className = "relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500";
                 if(text) { text.innerText = "Sandbox Mode"; text.className = "text-[9px] font-mono uppercase tracking-wider text-blue-500"; }
-                globalCachedTires = [...mockDatabase];
+                globalCachedTires = [];
             }
-            await precomputeAllServiceHours();
             processAndRenderCanvasBoard();
         }
 
@@ -717,78 +509,39 @@
                 return;
             }
             
-            console.log("Loading equipment & deployed tires from Supabase...");
             
-            // 1. Collect all known equipment + deployed chassis
-            const fleetMap = new Map(); // equipNum -> { category, total_tires }
+            let { data, error } = await supabaseClient.from('equipment').select('equipment_num, category, total_tires');
             
-            // Try loading from equipment table
-            let { data: equipData, error: equipError } = await supabaseClient
-                .from('equipment')
-                .select('equipment_num, category, total_tires');
-            
-            if (!equipError && equipData) {
-                equipData.forEach(eq => {
-                    const equipNum = eq.equipment_num;
-                    if (equipNum) {
-                        fleetMap.set(equipNum, {
-                            category: String(eq.category || '').toLowerCase().trim(),
-                            total_tires: eq.total_tires || 0
-                        });
-                    }
-                });
+            if (error) {
+                document.getElementById('fleet-list-otr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-tbr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-sv').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                return;
             }
             
-            // 2. Also get chassis from deployed tires (catches new chassis like DT-115 not in equipment table)
-            let { data: tireData, error: tireError } = await supabaseClient
-                .from('tires')
-                .select('status, group, category');
             
-            if (!tireError && tireData) {
-                tireData.forEach(t => {
-                    const status = t.status;
-                    if (!status || !isOperational(status)) return;
-                    if (fleetMap.has(status)) return; // already from equipment table
-                    
-                    // Infer category from tire's own group/category
-                    const normCat = String(t.category || '').toLowerCase().trim();
-                    const normGrp = String(t.group || '').toUpperCase().trim();
-                    let cat = 'heavy';
-                    if (normCat === 'logistics' || normGrp === 'TBR') cat = 'logistics';
-                    else if (normCat === 'sv' || normGrp === 'SV') cat = 'sv';
-                    
-                    fleetMap.set(status, { category: cat, total_tires: 0 });
-                });
+            if (!data || data.length === 0) {
+                document.getElementById('fleet-list-otr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-tbr').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                document.getElementById('fleet-list-sv').innerHTML = '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
+                return;
             }
             
-            // 3. Count actual installed tires per chassis from current cache
-            const installedCounts = {};
-            globalCachedTires.forEach(t => {
-                if (t.status && isOperational(t.status)) {
-                    installedCounts[t.status] = (installedCounts[t.status] || 0) + 1;
-                }
-            });
-            
-            // 4. Build grouped lists
             let OTREquipment = [], TBREquipment = [], SVEquipment = [];
             
-            fleetMap.forEach((info, equipNum) => {
-                const cat = info.category;
-                const tireCount = info.total_tires || installedCounts[equipNum] || 0;
-                const entry = { equipment_num: equipNum, category: cat, total_tires: tireCount };
-                if (cat === 'heavy') OTREquipment.push(entry);
-                else if (cat === 'logistics') TBREquipment.push(entry);
-                else if (cat === 'sv') SVEquipment.push(entry);
-                else OTREquipment.push(entry); // default fallback
+            data.forEach(equip => {
+                const cat = String(equip.category || '').toLowerCase().trim();
+                if (cat === "heavy") OTREquipment.push(equip);
+                else if (cat === "logistics") TBREquipment.push(equip);
+                else if (cat === "sv") SVEquipment.push(equip);
             });
             
-            console.log("Fleet map built - OTR:", OTREquipment.length, "TBR:", TBREquipment.length, "SV:", SVEquipment.length);
             
             const renderList = (equipList) => {
                 if (equipList.length === 0) return '<p class="text-gray-600 text-center italic py-2 text-[10px]">No active units</p>';
                 return equipList.map(eq => {
                     const equipNum = eq.equipment_num || 'N/A';
-                    const tireCount = eq.total_tires || installedCounts[equipNum] || 0;
+                    const tireCount = eq.total_tires || 0;
                     return `<div onclick="launchReplacementModule('${equipNum}', '${eq.category}', '', ${tireCount})" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-300 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
                         <span class="text-blue-600 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
                         <span class="bg-gray-50 border border-gray-200 text-gray-600 px-1.5 py-0.2 rounded text-[10px] font-mono">${tireCount} Tires</span>
@@ -800,11 +553,9 @@
             document.getElementById('fleet-list-tbr').innerHTML = renderList(TBREquipment);
             document.getElementById('fleet-list-sv').innerHTML = renderList(SVEquipment);
             
-            console.log("Fleet list rendered successfully");
         }
 
         function switchTab(tabId) {
-            console.log("switchTab called with tabId:", tabId);
             activeTab = tabId;
             document.querySelectorAll('.tab-canvas').forEach(el => el.classList.add('hidden'));
             document.getElementById(`canvas-${tabId}`).classList.remove('hidden');
@@ -815,7 +566,6 @@
             if (tabId === 'inventory') {
                 intakePanel.classList.remove('hidden');
                 fleetSidePanel.classList.add('hidden');
-                renderBrandPerformance();
             } else {
                 intakePanel.classList.add('hidden');
                 fleetSidePanel.classList.remove('hidden');
@@ -901,6 +651,7 @@
 
             let contextualData = globalCachedTires;
             
+            // Adjusted logic to respect clean category text fallbacks for group switches
             if (currentGroupFilter !== 'ALL') {
                 contextualData = contextualData.filter(t => {
                     const normCat = String(t.category || '').toLowerCase().trim();
@@ -955,6 +706,7 @@
                 if (isOperational(t.status)) {
                     operational++;
                     
+                    // Case-insensitive database matching based on user parameters
                     const normalizedCategory = String(t.category || '').toLowerCase().trim();
                     const groupClass = String(t.group || '').toUpperCase().trim();
 
@@ -998,10 +750,10 @@
 
             renderInventoryGridOnly();
             renderUtilityPanel();
-            renderBrandPerformance();
         }
 
         function showAddTiresModal(equipmentNum) {
+            // Show available tires from inventory and let user select which ones to install
             const availableTires = globalCachedTires.filter(t => 
                 ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status)
             );
@@ -1011,6 +763,7 @@
                 return;
             }
             
+            // Create a list to select from
             let tireList = availableTires.map((t, i) => `${i + 1}. ${t.serial_number} (${t.brand} - ${t.status})`).join('\n');
             const selectedIndex = prompt(`Select tire number to install on ${equipmentNum}:\n\n${tireList}`, '1');
             
@@ -1021,6 +774,7 @@
         }
         
         function showUpdateTiresModal(equipmentNum) {
+            // Show installed tires and let user update their status
             const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
             
             if (installedTires.length === 0) {
@@ -1044,6 +798,7 @@
             }
             
             try {
+                // Update tire's status to equipment number (linking it)
                 let { error } = await supabaseClient
                     .from('tires')
                     .update({ status: equipmentNum })
@@ -1053,6 +808,7 @@
                 
                 alert(`✅ Tire ${serialNumber} installed on ${equipmentNum}`);
                 
+                // Reload and refresh
                 await syncEnginePipeline();
                 await loadEquipmentForFleet();
                 launchReplacementModule(equipmentNum, '', '');
@@ -1093,33 +849,25 @@
                 
                 alert(`✅ Tire ${serialNumber} status updated to: ${selectedStatus}`);
                 
+                // Reload
                 await syncEnginePipeline();
             } catch (e) {
                 alert(`❌ Error: ${e.message || 'Unknown error'}`);
             }
         }
 
-        async function refreshTireCache() {
-            if (isSupabaseConfigured) {
-                try {
-                    let { data, error } = await supabaseClient.from('tires').select('*').order('created_at', { ascending: false });
-                    if (!error && data) globalCachedTires = data;
-                } catch (e) {}
-            }
-        }
-
-        async function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
+        function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
             document.getElementById('fleet-unselected-placeholder').classList.add('hidden');
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
             
+            // Store current equipment context
             window.currentEquipmentNum = chassisId;
             window.currentTireCount = tireCount || 0;
             
+            // Update equipment info
             document.getElementById('active-equip-num').innerText = chassisId;
             document.getElementById('active-tire-capacity').innerText = tireCount || 0;
             
-            // Refresh cache from DB to ensure latest data
-            await refreshTireCache();
             renderActiveTiresTable(chassisId, tireCount);
         }
         
@@ -1127,27 +875,18 @@
             const tbody = document.getElementById('active-tires-tbody');
             tbody.innerHTML = '';
             
-            // Normalize: trim equipmentNum for matching
-            const normEquip = String(equipmentNum || '').trim();
-            
-            // Match with trimmed comparison to handle whitespace/case issues
-            const installedTires = globalCachedTires.filter(t => {
-                return String(t.status || '').trim().toUpperCase() === normEquip.toUpperCase();
-            });
+            const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
             const installedCount = installedTires.length;
             const emptyCount = (capacity || 0) - installedCount;
             
             document.getElementById('active-tire-installed').innerText = installedCount;
             document.getElementById('active-tire-empty').innerText = Math.max(0, emptyCount);
             
-            // Use installed count as capacity if provided capacity is 0 (auto-detect from actual deployments)
-            const totalCapacity = Math.max(capacity || 0, installedCount || 1, 8);
+            // Create rows for all positions
+            const totalCapacity = capacity || 8; // Default to 8 if not specified
             
             for (let pos = 1; pos <= totalCapacity; pos++) {
-                const tire = installedTires.find(t => {
-                    const tp = Number(t.tire_position);
-                    return tp === pos || installedTires.indexOf(t) === pos - 1;
-                });
+                const tire = installedTires.find(t => t.tire_position === pos || installedTires.indexOf(t) === pos - 1);
                 
                 const row = document.createElement('tr');
                 row.className = "border-b border-gray-200 hover:bg-gray-50";
@@ -1158,7 +897,7 @@
                     <td class="border border-gray-200 p-2 text-gray-600">${tire?.pattern || '--'}</td>
                     <td class="border border-gray-200 p-2 text-center font-mono text-gray-600">${tire?.remaining_tread_depth || '--'}</td>
                     <td class="border border-gray-200 p-2 text-center">
-                        <button onclick="openReplacementModal(${pos}, '${normEquip}')" class="px-2 py-1 bg-orange-500 text-white rounded text-[9px] hover:bg-orange-600">
+                        <button onclick="openReplacementModal(${pos}, '${equipmentNum}')" class="px-2 py-1 bg-orange-500 text-white rounded text-[9px] hover:bg-orange-600">
                             <i class="fa-solid fa-pen"></i>
                         </button>
                     </td>
@@ -1171,15 +910,18 @@
             const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
             const currentTire = installedTires.find(t => installedTires.indexOf(t) === position - 1);
             
+            // Populate modal header
             document.getElementById('modal-date').value = getTodayDateString();
             document.getElementById('modal-position').innerText = position;
             document.getElementById('modal-wo-id').innerText = `WO-${equipmentNum}-${Math.floor(1000 + Math.random() * 9000)}`;
             document.getElementById('modal-odometer').value = '';
             
+            // Reset removal section
             document.getElementById('modal-removal-reason').value = '';
             document.getElementById('modal-removal-rtd').value = currentTire?.remaining_tread_depth || '';
             document.getElementById('modal-disposition').value = '';
             
+            // Populate available tires for installation
             const availableTires = globalCachedTires.filter(t => 
                 ["Brand New", "Warehouse Spare", "For Repair"].includes(t.status)
             );
@@ -1193,6 +935,7 @@
                 tireSelect.appendChild(option);
             });
             
+            // Setup tire selection change handler
             tireSelect.onchange = function() {
                 const selectedSerial = this.value;
                 const selectedTire = globalCachedTires.find(t => t.serial_number === selectedSerial);
@@ -1207,8 +950,10 @@
             
             document.getElementById('modal-install-remarks').value = '';
             
+            // Store context for saving
             window.modalContext = { position, equipmentNum, currentTire };
             
+            // Show modal
             document.getElementById('tire-replacement-modal').classList.remove('hidden');
         }
         
@@ -1236,32 +981,13 @@
                 
                 alert(`✅ Tire ${serialNumber} marked as Repaired and is now available for installation`);
                 
+                // Refresh inventory
                 await syncEnginePipeline();
             } catch (e) {
                 alert(`❌ Error: ${e.message || 'Unknown error'}`);
             }
         }
-
-        function pushMockEvent(event) {
-            mockTireEvents.push(event);
-        }
-
-        function applyRemovalToMockDb(serial, newStatus, removalRTD) {
-            const target = mockDatabase.find(t => t.serial_number === serial);
-            if (target) {
-                target.status = newStatus;
-                target.remaining_tread_depth = removalRTD;
-            }
-        }
-
-        function applyInstallToMockDb(serial, equipmentNum, position, remarks) {
-            const target = mockDatabase.find(t => t.serial_number === serial);
-            if (target) {
-                target.status = equipmentNum;
-                target.remarks = remarks;
-            }
-        }
-
+        
         async function savePositionUpdate() {
             const ctx = window.modalContext;
             if (!ctx) return;
@@ -1275,9 +1001,15 @@
             const odometer = parseFloat(document.getElementById('modal-odometer').value) || null;
             const woId = document.getElementById('modal-wo-id').innerText;
             
+            if (!isSupabaseConfigured) {
+                alert("Supabase not configured");
+                return;
+            }
+            
             try {
                 // ===== LOG REMOVAL EVENT =====
                 if (ctx.currentTire && removalReason && disposition) {
+                    // Map disposition to new tire status
                     let newStatus = "Warehouse Spare";
                     if (disposition === "SCRAP") newStatus = "Scrapped Asset";
                     else if (disposition === "FOR REPAIR") newStatus = "For Repair";
@@ -1286,39 +1018,30 @@
                     else if (disposition === "WARRANTY") newStatus = "For Repair";
                     else if (disposition === "FOR SPARE") newStatus = "Warehouse Spare";
                     
-                    // Compute total_hours_km_used for Supabase: find the INSTALLED event with highest SMR before this removal
-                    let totalHoursKmUsed = null;
-                    if (odometer !== null) {
-                        // In Supabase mode, find the latest INSTALL event before this removal
-                        const installEvents = isSupabaseConfigured
-                            ? await supabaseClient
-                                .from('tire_events')
-                                .select('smr_odometer')
-                                .eq('serial_number', ctx.currentTire.serial_number)
-                                .eq('event_type', 'INSTALLED')
-                                .lte('date', date)
-                                .order('date', { ascending: false })
-                                .order('smr_odometer', { ascending: false })
-                                .limit(1)
-                            : { data: null, error: null };
+                    // Calculate total hours/km used
+                    let totalHoursKmUsed = 0;
+                    try {
+                        // Query previous INSTALLED event for this tire to get installation SMR
+                        const { data: previousEvents } = await supabaseClient
+                            .from('tire_events')
+                            .select('smr_odometer')
+                            .eq('serial_number', ctx.currentTire.serial_number)
+                            .eq('event_type', 'INSTALLED')
+                            .order('created_at', { ascending: false })
+                            .limit(1);
                         
-                        let installOdo = null;
-                        if (isSupabaseConfigured && installEvents.data && installEvents.data.length > 0) {
-                            installOdo = installEvents.data[0].smr_odometer;
-                        } else if (!isSupabaseConfigured) {
-                            // In mock mode, compute from mockTireEvents
-                            const priorInstalls = mockTireEvents
-                                .filter(e => e.serial_number === ctx.currentTire.serial_number && e.event_type === 'INSTALLED' && e.date <= date)
-                                .sort((a, b) => b.date.localeCompare(a.date) || (b.smr_odometer || 0) - (a.smr_odometer || 0));
-                            if (priorInstalls.length > 0) installOdo = priorInstalls[0].smr_odometer;
+                        if (previousEvents && previousEvents.length > 0) {
+                            const installationSmr = parseFloat(previousEvents[0].smr_odometer) || 0;
+                            const removalSmr = odometer || 0;
+                            totalHoursKmUsed = removalSmr - installationSmr;
                         }
-                        if (installOdo !== null) {
-                            totalHoursKmUsed = Math.max(0, odometer - installOdo);
-                        }
+                    } catch (e) {
                     }
                     
-                    if (!isSupabaseConfigured) {
-                        pushMockEvent({
+                    // Log removal event to tire_events table
+                    await supabaseClient
+                        .from('tire_events')
+                        .insert([{
                             serial_number: ctx.currentTire.serial_number,
                             event_type: 'REMOVED',
                             date: date,
@@ -1327,35 +1050,20 @@
                             removal_reason: removalReason,
                             disposition: disposition,
                             remaining_tread_depth: removalRTD,
+                            total_hours_km_used: totalHoursKmUsed,
                             work_order_id: woId,
                             smr_odometer: odometer,
-                            total_hours_km_used: totalHoursKmUsed,
                             remarks: remarks || null
-                        });
-                        applyRemovalToMockDb(ctx.currentTire.serial_number, newStatus, removalRTD);
-                    } else {
-                        let { error: removalEventErr } = await supabaseClient
-                            .from('tire_events')
-                            .insert([{
-                                serial_number: ctx.currentTire.serial_number,
-                                event_type: 'REMOVED',
-                                date: date,
-                                equipment_num: ctx.equipmentNum,
-                                tire_position: ctx.position,
-                                removal_reason: removalReason,
-                                disposition: disposition,
-                                remaining_tread_depth: removalRTD,
-                                work_order_id: woId,
-                                smr_odometer: odometer,
-                                total_hours_km_used: totalHoursKmUsed,
-                                remarks: remarks || null
-                            }]);
-                        if (removalEventErr) throw removalEventErr;
-                        let { error: removalTireErr } = await supabaseClient
-                            .from('tires')
-                            .update({ status: newStatus, remaining_tread_depth: removalRTD })
-                            .eq('serial_number', ctx.currentTire.serial_number);
-                    }
+                        }]);
+                    
+                    // Update tire status in tires table
+                    await supabaseClient
+                        .from('tires')
+                        .update({ 
+                            status: newStatus,
+                            remaining_tread_depth: removalRTD
+                        })
+                        .eq('serial_number', ctx.currentTire.serial_number);
                 }
                 
                 // ===== LOG INSTALLATION EVENT =====
@@ -1363,8 +1071,10 @@
                     const newTire = globalCachedTires.find(t => t.serial_number === installSerial);
                     const previousStatus = newTire?.status || 'Unknown';
                     
-                    if (!isSupabaseConfigured) {
-                        pushMockEvent({
+                    // Log installation event to tire_events table
+                    await supabaseClient
+                        .from('tire_events')
+                        .insert([{
                             serial_number: installSerial,
                             event_type: 'INSTALLED',
                             date: date,
@@ -1374,41 +1084,25 @@
                             work_order_id: woId,
                             smr_odometer: odometer,
                             remarks: remarks || null
-                        });
-                        applyInstallToMockDb(installSerial, ctx.equipmentNum, ctx.position, remarks);
-                    } else {
-                        let { error: eventErr } = await supabaseClient
-                            .from('tire_events')
-                            .insert([{
-                                serial_number: installSerial,
-                                event_type: 'INSTALLED',
-                                date: date,
-                                equipment_num: ctx.equipmentNum,
-                                tire_position: ctx.position,
-                                previous_status: previousStatus,
-                                work_order_id: woId,
-                                smr_odometer: odometer,
-                                remarks: remarks || null
-                            }]);
-                        if (eventErr) throw eventErr;
-                        let { error: tireErr } = await supabaseClient
-                            .from('tires')
-                            .update({ status: ctx.equipmentNum, tire_position: ctx.position, remarks: remarks })
-                            .eq('serial_number', installSerial);
-                        if (tireErr) throw tireErr;
-                    }
+                        }]);
+                    
+                    // Update tire status in tires table to mark as operational
+                    await supabaseClient
+                        .from('tires')
+                        .update({ 
+                            status: ctx.equipmentNum,
+                            tire_position: ctx.position,
+                            remarks: remarks
+                        })
+                        .eq('serial_number', installSerial);
                 }
                 
                 alert(`✅ Position ${ctx.position} updated successfully`);
                 
+                // Refresh and close
                 await syncEnginePipeline();
                 await loadEquipmentForFleet();
-                // Recalculate actual installed count instead of using stale window.currentTireCount
-                const normEquip = String(ctx.equipmentNum || '').trim();
-                const actualInstalledCount = globalCachedTires.filter(t => {
-                    return String(t.status || '').trim().toUpperCase() === normEquip.toUpperCase();
-                }).length;
-                renderActiveTiresTable(ctx.equipmentNum, actualInstalledCount);
+                renderActiveTiresTable(ctx.equipmentNum, window.currentTireCount);
                 closeReplacementModal();
             } catch (e) {
                 alert(`❌ Error: ${e.message || 'Unknown error'}`);
@@ -1434,132 +1128,11 @@
                 
                 alert(`✅ Tire ${serialNumber} marked as Repaired`);
                 
+                // Refresh inventory
                 await syncEnginePipeline();
             } catch (e) {
                 alert(`❌ Error: ${e.message || 'Unknown error'}`);
             }
-        }
-
-        // ===== TIRE SERVICE HOURS COMPUTATION =====
-        let cachedServiceHours = {};
-
-        function computeServiceHoursForSerial(serial) {
-            const events = mockTireEvents.filter(e => e.serial_number === serial);
-            if (events.length === 0) return null;
-            let totalHours = 0;
-            let cycles = 0;
-            let lastInstall = null;
-            events.sort((a, b) => new Date(a.date) - new Date(b.date) || (a.smr_odometer || 0) - (b.smr_odometer || 0));
-            events.forEach(e => {
-                if (e.event_type === 'INSTALLED') lastInstall = e.smr_odometer;
-                else if (e.event_type === 'REMOVED' && lastInstall !== null) {
-                    totalHours += Math.max(0, (e.smr_odometer || 0) - (lastInstall || 0));
-                    cycles++;
-                    lastInstall = null;
-                }
-            });
-            return { totalHours, cycles };
-        }
-
-        async function precomputeAllServiceHours() {
-            if (!isSupabaseConfigured) {
-                const allSerials = [...new Set([
-                    ...mockTireEvents.map(e => e.serial_number),
-                    ...globalCachedTires.map(t => t.serial_number)
-                ])];
-                allSerials.forEach(serial => {
-                    cachedServiceHours[serial] = computeServiceHoursForSerial(serial);
-                });
-            } else {
-                const allSerials = globalCachedTires.map(t => t.serial_number);
-                try {
-                    let { data: events, error } = await supabaseClient
-                        .from('tire_events')
-                        .select('serial_number, event_type, smr_odometer, date')
-                        .in('serial_number', allSerials.length > 0 ? allSerials : ['NONE'])
-                        .order('date', { ascending: true })
-                        .order('smr_odometer', { ascending: true });
-                    if (error) throw error;
-                    const grouped = {};
-                    (events || []).forEach(e => {
-                        if (!grouped[e.serial_number]) grouped[e.serial_number] = [];
-                        grouped[e.serial_number].push(e);
-                    });
-                    Object.keys(grouped).forEach(serial => {
-                        let totalHours = 0, cycles = 0, lastInstall = null;
-                        grouped[serial].forEach(e => {
-                            if (e.event_type === 'INSTALLED') lastInstall = e.smr_odometer;
-                            else if (e.event_type === 'REMOVED' && lastInstall !== null) {
-                                totalHours += Math.max(0, (e.smr_odometer || 0) - (lastInstall || 0));
-                                cycles++;
-                                lastInstall = null;
-                            }
-                        });
-                        cachedServiceHours[serial] = { totalHours, cycles };
-                    });
-                    allSerials.forEach(serial => {
-                        if (!cachedServiceHours[serial]) cachedServiceHours[serial] = null;
-                    });
-                } catch (e) {
-                    allSerials.forEach(serial => { cachedServiceHours[serial] = null; });
-                }
-            }
-        }
-
-        function getServiceHoursDisplay(serial) {
-            const info = cachedServiceHours[serial];
-            if (info === null || info === undefined) return '--';
-            if (info.totalHours === 0 && info.cycles === 0) return '<span class="text-green-500 italic">In Service</span>';
-            const hrs = info.totalHours;
-            if (hrs >= 1000) return (hrs / 1000).toFixed(1) + 'K';
-            return hrs.toFixed(0);
-        }
-
-        function getBrandPerformanceData() {
-            const brandStats = {};
-            Object.keys(cachedServiceHours).forEach(serial => {
-                const tire = globalCachedTires.find(t => t.serial_number === serial);
-                if (!tire) return;
-                const brand = tire.brand || 'Unknown';
-                const info = cachedServiceHours[serial];
-                if (info && info.totalHours > 0) {
-                    if (!brandStats[brand]) {
-                        brandStats[brand] = { totalHours: 0, count: 0, tires: [] };
-                    }
-                    brandStats[brand].totalHours += info.totalHours;
-                    brandStats[brand].count++;
-                    brandStats[brand].tires.push({ serial, hours: info.totalHours });
-                }
-            });
-            Object.keys(brandStats).forEach(b => {
-                brandStats[b].averageHours = brandStats[b].count > 0 ? brandStats[b].totalHours / brandStats[b].count : 0;
-            });
-            return brandStats;
-        }
-
-        function renderBrandPerformance() {
-            const container = document.getElementById('brand-performance-container');
-            if (!container) return;
-            const brandStats = getBrandPerformanceData();
-            const brands = Object.keys(brandStats);
-            if (brands.length === 0) {
-                container.innerHTML = '<div class="text-gray-500 text-[10px] italic py-1">No service hour data available yet. Perform tire replacements to build brand performance metrics.</div>';
-                return;
-            }
-            container.innerHTML = brands.map(brand => {
-                const stat = brandStats[brand];
-                const avg = stat.averageHours;
-                const avgDisplay = avg >= 1000 ? (avg / 1000).toFixed(1) + 'K' : avg.toFixed(0);
-                const totalDisplay = stat.totalHours >= 1000 ? (stat.totalHours / 1000).toFixed(1) + 'K' : stat.totalHours.toFixed(0);
-                return `
-                    <div class="bg-white border border-gray-200 rounded p-2 text-center flex-1 min-w-[120px]">
-                        <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">${brand}</p>
-                        <p class="text-sm font-bold text-blue-600 font-mono">${avgDisplay}</p>
-                        <p class="text-[9px] text-gray-500">Avg Hrs/KM (${stat.count} tires)</p>
-                        <p class="text-[9px] text-gray-400">Total: ${totalDisplay}</p>
-                    </div>
-                `;
-            }).join('');
         }
 
         function renderInventoryGridOnly() {
@@ -1607,7 +1180,7 @@
             document.getElementById('btn-page-next').disabled = (currentPage === totalPages || totalItems === 0);
 
             if (paginatedData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-gray-500 font-sans">No matching tire equipment data profiles located inside active search scope bounds.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-gray-500 font-sans">No matching tire equipment data profiles located inside active search scope bounds.</td></tr>`;
                 return;
             }
 
@@ -1625,6 +1198,7 @@
                     <i class="fa-solid fa-sliders mr-1"></i>Edit
                 </button>`;
                 
+                // Add "Mark as Repaired" button for "For Repair" tires
                 if (t.status === "For Repair") {
                     actionBtns += ` <button onclick="markTireAsRepaired('${t.serial_number}')" class="bg-green-700 hover:bg-green-600 text-white px-2 py-0.5 rounded border border-green-600 hover:border-green-500 transition text-[10px] font-sans font-medium ml-1">
                         <i class="fa-solid fa-check mr-1"></i>Repaired
@@ -1644,7 +1218,6 @@
                     <td class="p-2 text-gray-500 text-left">${t.type}</td>
                     <td class="p-2 text-gray-500 text-left">${Number(t.original_tread_depth || 0).toFixed(1)}</td>
                     <td class="p-2 text-gray-600 font-semibold text-left">${Number(t.remaining_tread_depth || 0).toFixed(1)}</td>
-                    <td class="p-2 text-gray-600 font-mono text-left" title="Total service hours/km">${getServiceHoursDisplay(t.serial_number)}</td>
                     <td class="p-2 text-left">${badge}</td>
                     <td class="p-1 text-left space-x-1">
                         ${actionBtns}
@@ -1657,98 +1230,6 @@
         function changePage(direction) {
             currentPage += direction;
             renderInventoryGridOnly();
-        }
-
-        // ===== DATABASE MANAGER =====
-        function openDBManager() {
-            document.getElementById('db-manager-modal').classList.remove('hidden');
-            refreshDBManager();
-        }
-
-        function closeDBManager() {
-            document.getElementById('db-manager-modal').classList.add('hidden');
-        }
-
-        function refreshDBManager() {
-            const tbody = document.getElementById('db-manager-tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const data = globalCachedTires;
-            document.getElementById('db-count-badge').innerText = `${data.length} records`;
-            document.getElementById('db-mode-badge').innerText = isSupabaseConfigured ? 'Live DB' : 'Sandbox';
-
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-gray-500 font-sans">No records in database.</td></tr>';
-                return;
-            }
-
-            data.forEach((t, idx) => {
-                const hrsInfo = cachedServiceHours[t.serial_number];
-                const hrsDisp = hrsInfo && hrsInfo.totalHours > 0 ? hrsInfo.totalHours.toFixed(0) + 'h' : (hrsInfo && hrsInfo.totalHours === 0 && hrsInfo.cycles === 0 ? 'In Svc' : '--');
-                const row = document.createElement('tr');
-                row.className = "hover:bg-gray-100/60";
-                row.innerHTML = `
-                    <td class="p-1.5 text-gray-400 text-[10px]">${idx + 1}</td>
-                    <td class="p-1.5 font-bold text-blue-600">${t.serial_number}</td>
-                    <td class="p-1.5 text-gray-500">${t.group || '-'}</td>
-                    <td class="p-1.5 text-gray-500">${t.brand || '-'}</td>
-                    <td class="p-1.5 text-gray-500 text-[10px]">${t.tire_size || '-'}</td>
-                    <td class="p-1.5 text-gray-600">${t.remaining_tread_depth != null ? Number(t.remaining_tread_depth).toFixed(1) : '-'}</td>
-                    <td class="p-1.5">${t.status || '-'}</td>
-                    <td class="p-1.5 text-gray-500 font-mono">${hrsDisp}</td>
-                    <td class="p-1.5 text-center">
-                        <button onclick="deleteRecord('${t.serial_number}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded border border-rose-300 text-[10px]">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        async function deleteRecord(serial) {
-            if (!confirm(`Delete tire ${serial}? This cannot be undone.`)) return;
-            if (!isSupabaseConfigured) {
-                const idx = mockDatabase.findIndex(t => t.serial_number === serial);
-                if (idx >= 0) mockDatabase.splice(idx, 1);
-                await syncEnginePipeline();
-                refreshDBManager();
-            } else {
-                try {
-                    await supabaseClient.from('tire_events').delete().eq('serial_number', serial);
-                    let { error } = await supabaseClient.from('tires').delete().eq('serial_number', serial);
-                    if (error) throw error;
-                    await syncEnginePipeline();
-                    refreshDBManager();
-                } catch (e) { alert(`Delete failed: ${e.message}`); }
-            }
-        }
-
-        async function clearAllRecords() {
-            const count = globalCachedTires.length;
-            if (count === 0) return alert("No records to delete.");
-            if (!confirm(`DELETE ALL ${count} records? This CANNOT be undone. Are you sure?`)) return;
-            if (!confirm(`⚠️ FINAL WARNING: This will permanently remove all ${count} tire records. Proceed?`)) return;
-
-            if (!isSupabaseConfigured) {
-                mockDatabase.length = 0;
-                mockTireEvents.length = 0;
-                cachedServiceHours = {};
-                await syncEnginePipeline();
-                refreshDBManager();
-                closeDBManager();
-            } else {
-                try {
-                    await supabaseClient.from('tire_events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                    let { error } = await supabaseClient.from('tires').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                    if (error) throw error;
-                    cachedServiceHours = {};
-                    await syncEnginePipeline();
-                    refreshDBManager();
-                    closeDBManager();
-                } catch (e) { alert(`Clear failed: ${e.message}`); }
-            }
         }
 
         function exportToExcel() {
@@ -1780,11 +1261,9 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Date Added,Serial Number,Group,Size Spec,Make Brand,Pattern,Ply Rating,Type,Original RTD,Remaining RTD,Total Hrs/KM,Status\n";
+            csvContent += "Date Added,Serial Number,Group,Size Spec,Make Brand,Pattern,Ply Rating,Type,Original RTD,Remaining RTD,Status\n";
 
             data.forEach(t => {
-                const hrsInfo = cachedServiceHours[t.serial_number];
-                const hrsDisplay = (hrsInfo && hrsInfo.totalHours > 0) ? hrsInfo.totalHours.toFixed(0) : (hrsInfo && hrsInfo.totalHours === 0 && hrsInfo.cycles === 0 ? 'In Service' : 'N/A');
                 let row = [
                     t.date_added || '',
                     `"${t.serial_number}"`,
@@ -1796,7 +1275,6 @@
                     t.type,
                     Number(t.original_tread_depth || 0).toFixed(1),
                     Number(t.remaining_tread_depth || 0).toFixed(1),
-                    `"${hrsDisplay}"`,
                     `"${t.status}"`
                 ].join(",");
                 csvContent += row + "\n";
@@ -1915,7 +1393,7 @@
         }
 
         function openUpdateModal(serial) {
-            currentUpdateSerialTarget = serial;
+            // currentUpdateSerialTarget removed
             const item = globalCachedTires.find(t => t.serial_number === serial);
             if (!item) return;
 
@@ -1945,7 +1423,7 @@
 
         function closeUpdateModal() {
             document.getElementById('record-update-modal').classList.add('hidden');
-            currentUpdateSerialTarget = null;
+            // currentUpdateSerialTarget removed
         }
 
         function toggleModalChassisInput(val) {
@@ -1970,7 +1448,7 @@
             }
 
             if (!isSupabaseConfigured) {
-                const target = mockDatabase.find(t => t.serial_number === currentUpdateSerialTarget);
+                // Removed unused mock fallback
                 if (target) {
                     target.status = finalStatus;
                     target.remaining_tread_depth = remTread;
@@ -1979,7 +1457,7 @@
                     target.original_tread_depth = origTread;
                 }
                 closeUpdateModal();
-                await syncEnginePipeline();
+                syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires')
@@ -1993,7 +1471,7 @@
                         .eq('serial_number', currentUpdateSerialTarget);
                     if (error) throw error;
                     closeUpdateModal();
-                    await syncEnginePipeline();
+                    syncEnginePipeline();
                 } catch (e) { alert(e.message); }
             }
         }
@@ -2001,12 +1479,12 @@
         async function flagTargetAsScrapDirect() {
             if (!currentUpdateSerialTarget) return;
             if (!isSupabaseConfigured) {
-                const target = mockDatabase.find(t => t.serial_number === currentUpdateSerialTarget);
+                // Removed unused mock fallback
                 if (target) {
                     target.status = "Scrapped Asset";
                 }
                 closeUpdateModal();
-                await syncEnginePipeline();
+                syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires')
@@ -2014,7 +1492,7 @@
                         .eq('serial_number', currentUpdateSerialTarget);
                     if (error) throw error;
                     closeUpdateModal();
-                    await syncEnginePipeline();
+                    syncEnginePipeline();
                 } catch (e) { alert(e.message); }
             }
         }
@@ -2056,11 +1534,11 @@
             }
 
             if (!isSupabaseConfigured) {
-                records.forEach(r => mockDatabase.unshift(r)); 
+                // Removed unused mock fallback 
                 alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
                 currentIntakeCount = 1; 
                 currentPage = 1;
-                await syncEnginePipeline();
+                syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires').insert(records);
@@ -2068,7 +1546,7 @@
                     alert(`Successfully submitted batch array payload containing ${records.length} tires to Supabase.`);
                     currentIntakeCount = 1;
                     currentPage = 1;
-                    await syncEnginePipeline();
+                    syncEnginePipeline();
                 } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
             }
         }
@@ -2076,12 +1554,11 @@
         window.onload = () => { 
             syncEnginePipeline();
             
+            // Wire up tab buttons
             document.getElementById('tab-btn-inventory').addEventListener('click', () => {
-                console.log("Inventory tab clicked");
                 switchTab('inventory');
             });
             document.getElementById('tab-btn-fleet').addEventListener('click', () => {
-                console.log("Fleet tab clicked");
                 switchTab('fleet');
             });
         };
