@@ -1709,15 +1709,14 @@
             if (!isSupabaseConfigured) {
                 const idx = mockDatabase.findIndex(t => t.serial_number === serial);
                 if (idx >= 0) mockDatabase.splice(idx, 1);
-                syncEnginePipeline();
+                await syncEnginePipeline();
                 refreshDBManager();
             } else {
                 try {
-                    // Delete from both tables
                     await supabaseClient.from('tire_events').delete().eq('serial_number', serial);
                     let { error } = await supabaseClient.from('tires').delete().eq('serial_number', serial);
                     if (error) throw error;
-                    syncEnginePipeline();
+                    await syncEnginePipeline();
                     refreshDBManager();
                 } catch (e) { alert(`Delete failed: ${e.message}`); }
             }
@@ -1733,7 +1732,7 @@
                 mockDatabase.length = 0;
                 mockTireEvents.length = 0;
                 cachedServiceHours = {};
-                syncEnginePipeline();
+                await syncEnginePipeline();
                 refreshDBManager();
                 closeDBManager();
             } else {
@@ -1742,7 +1741,7 @@
                     let { error } = await supabaseClient.from('tires').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                     if (error) throw error;
                     cachedServiceHours = {};
-                    syncEnginePipeline();
+                    await syncEnginePipeline();
                     refreshDBManager();
                     closeDBManager();
                 } catch (e) { alert(`Clear failed: ${e.message}`); }
@@ -1977,7 +1976,7 @@
                     target.original_tread_depth = origTread;
                 }
                 closeUpdateModal();
-                syncEnginePipeline();
+                await syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires')
@@ -1991,7 +1990,7 @@
                         .eq('serial_number', currentUpdateSerialTarget);
                     if (error) throw error;
                     closeUpdateModal();
-                    syncEnginePipeline();
+                    await syncEnginePipeline();
                 } catch (e) { alert(e.message); }
             }
         }
@@ -2004,7 +2003,7 @@
                     target.status = "Scrapped Asset";
                 }
                 closeUpdateModal();
-                syncEnginePipeline();
+                await syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires')
@@ -2012,7 +2011,7 @@
                         .eq('serial_number', currentUpdateSerialTarget);
                     if (error) throw error;
                     closeUpdateModal();
-                    syncEnginePipeline();
+                    await syncEnginePipeline();
                 } catch (e) { alert(e.message); }
             }
         }
@@ -2058,7 +2057,7 @@
                 alert(`Successfully initialized sandbox array batch payload with ${records.length} assets.`);
                 currentIntakeCount = 1; 
                 currentPage = 1;
-                syncEnginePipeline();
+                await syncEnginePipeline();
             } else {
                 try {
                     const { error } = await supabaseClient.from('tires').insert(records);
@@ -2066,7 +2065,7 @@
                     alert(`Successfully submitted batch array payload containing ${records.length} tires to Supabase.`);
                     currentIntakeCount = 1;
                     currentPage = 1;
-                    syncEnginePipeline();
+                    await syncEnginePipeline();
                 } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
             }
         }
