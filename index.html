@@ -36,8 +36,8 @@
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-circle-nodes text-blue-600 text-lg"></i>
                 <div>
-                    <h1 class="text-sm font-bold tracking-tight text-gray-800">OAEC-TIRE MONITORING SYSTEM</h1>
-                    <p class="text-[10px] text-gray-500">Cloud-based monitoring</p>
+                    <h1 class="text-sm font-bold tracking-tight text-gray-800">Tyre-Track Pro</h1>
+                    <p class="text-[10px] text-gray-500">Technical Inventory System</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2 bg-gray-50 px-2 py-1 rounded border border-gray-200">
@@ -253,9 +253,9 @@
                     </div>
 
                     <!-- Equipment Info -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-white border-b border-gray-200 text-[15px]">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-white border-b border-gray-200 text-[10px]">
                         <div><span class="font-bold text-gray-600">Equipment:</span> <span id="active-equip-num" class="text-blue-600 font-mono">--</span></div>
-                          <div><span class="font-bold text-gray-600">Total Tires:</span> <span id="active-tire-capacity" class="text-blue-600 font-mono">--</span></div>
+                        <div><span class="font-bold text-gray-600">Total Capacity:</span> <span id="active-tire-capacity" class="text-blue-600 font-mono">--</span></div>
                         <div><span class="font-bold text-gray-600">Currently Installed:</span> <span id="active-tire-installed" class="text-blue-600 font-mono">--</span></div>
                         <div><span class="font-bold text-gray-600">Empty Positions:</span> <span id="active-tire-empty" class="text-orange-600 font-mono">--</span></div>
                     </div>
@@ -265,9 +265,9 @@
                         <table class="w-full border border-gray-200 text-[11px]">
                             <thead>
                                 <tr class="bg-gray-100 border-b border-gray-200">
-                                    <th class="border border-gray-200 p-2 text-center font-bold text-gray-600">POSITION</th>
+                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">POSITION</th>
                                     <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">BRAND</th>
-                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">SERIAL/BRANDING NUMBER</th>
+                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">SERIAL/BRANDING</th>
                                     <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">PATTERN</th>
                                     <th class="border border-gray-200 p-2 text-center font-bold text-gray-600">RTD</th>
                                     <th class="border border-gray-200 p-2 text-center font-bold text-gray-600">ACTION</th>
@@ -477,7 +477,7 @@
         function bootstrapMockDatabase() {
             const groups = ["OTR", "TBR", "SV"];
             const brands = ["Michelin", "Bridgestone", "Goodyear", "Continental"];
-            const statusPool = ["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"];
+            const statusPool = ["Brand New", "Repaired", "Warehouse Spare", "For Repair", "For Rotation", "For Evaluation", "Scrapped Asset"];
             const specs = {
                 "OTR": { size: "45/65R45", pattern: "A4", ply: "58PR", orig: 28.0, type: "Tubeless" },
                 "TBR": { size: "295/80R22.5", pattern: "PW825+", ply: "16PR", orig: 24.0, type: "Tubeless" },
@@ -714,7 +714,7 @@
         }
 
         function isOperational(st) {
-            return !["Brand New", "Warehouse Spare", "For Repair", "Scrapped Asset"].includes(st);
+            return !["Brand New", "Repaired", "Warehouse Spare", "For Repair", "For Rotation", "For Evaluation", "Scrapped Asset"].includes(st);
         }
 
         function toggleHeaderFilterMenu(event, columnKey) {
@@ -1039,15 +1039,44 @@
             window.modalContext = null;
         }
         
+        async function markTireAsRepaired(serialNumber) {
+            if (!isSupabaseConfigured) {
+                alert("Supabase not configured");
+                return;
+            }
+            
+            try {
+                const confirmed = confirm(`Mark tire ${serialNumber} as Repaired?`);
+                if (!confirmed) return;
+                
+                let { error } = await supabaseClient
+                    .from('tires')
+                    .update({ status: 'Repaired' })
+                    .eq('serial_number', serialNumber);
+                
+                if (error) throw error;
+                
+                alert(`✅ Tire ${serialNumber} marked as Repaired and is now available for installation`);
+                
+                // Refresh inventory
+                await syncEnginePipeline();
+            } catch (e) {
+                alert(`❌ Error: ${e.message || 'Unknown error'}`);
+            }
+        }
+        
         async function savePositionUpdate() {
             const ctx = window.modalContext;
             if (!ctx) return;
             
+            const date = document.getElementById('modal-date').value;
             const removalReason = document.getElementById('modal-removal-reason').value;
             const removalRTD = parseFloat(document.getElementById('modal-removal-rtd').value) || 0;
             const disposition = document.getElementById('modal-disposition').value;
             const installSerial = document.getElementById('modal-install-tire').value;
             const remarks = document.getElementById('modal-install-remarks').value;
+            const odometer = parseFloat(document.getElementById('modal-odometer').value) || null;
+            const woId = document.getElementById('modal-wo-id').innerText;
             
             if (!isSupabaseConfigured) {
                 alert("Supabase not configured");
@@ -1055,12 +1084,35 @@
             }
             
             try {
-                // If removing current tire
+                // ===== LOG REMOVAL EVENT =====
                 if (ctx.currentTire && removalReason && disposition) {
+                    // Map disposition to new tire status
                     let newStatus = "Warehouse Spare";
                     if (disposition === "SCRAP") newStatus = "Scrapped Asset";
                     else if (disposition === "FOR REPAIR") newStatus = "For Repair";
+                    else if (disposition === "FOR EVALUATION") newStatus = "For Evaluation";
+                    else if (disposition === "FOR ROTATION") newStatus = "Warehouse Spare";
+                    else if (disposition === "WARRANTY") newStatus = "For Repair";
+                    else if (disposition === "FOR SPARE") newStatus = "Warehouse Spare";
                     
+                    // Log removal event to tire_events table
+                    await supabaseClient
+                        .from('tire_events')
+                        .insert([{
+                            serial_number: ctx.currentTire.serial_number,
+                            event_type: 'REMOVED',
+                            date: date,
+                            equipment_num: ctx.equipmentNum,
+                            tire_position: ctx.position,
+                            removal_reason: removalReason,
+                            disposition: disposition,
+                            remaining_tread_depth: removalRTD,
+                            work_order_id: woId,
+                            smr_odometer: odometer,
+                            remarks: remarks || null
+                        }]);
+                    
+                    // Update tire status in tires table
                     await supabaseClient
                         .from('tires')
                         .update({ 
@@ -1070,8 +1122,27 @@
                         .eq('serial_number', ctx.currentTire.serial_number);
                 }
                 
-                // If installing new tire
+                // ===== LOG INSTALLATION EVENT =====
                 if (installSerial) {
+                    const newTire = globalCachedTires.find(t => t.serial_number === installSerial);
+                    const previousStatus = newTire?.status || 'Unknown';
+                    
+                    // Log installation event to tire_events table
+                    await supabaseClient
+                        .from('tire_events')
+                        .insert([{
+                            serial_number: installSerial,
+                            event_type: 'INSTALLED',
+                            date: date,
+                            equipment_num: ctx.equipmentNum,
+                            tire_position: ctx.position,
+                            previous_status: previousStatus,
+                            work_order_id: woId,
+                            smr_odometer: odometer,
+                            remarks: remarks || null
+                        }]);
+                    
+                    // Update tire status in tires table to mark as operational
                     await supabaseClient
                         .from('tires')
                         .update({ 
@@ -1094,6 +1165,31 @@
             }
         }
 
+
+        async function markTireAsRepaired(serialNumber) {
+            if (!isSupabaseConfigured) {
+                alert("Supabase not configured");
+                return;
+            }
+            
+            if (!confirm(`Mark tire ${serialNumber} as Repaired?`)) {
+                return;
+            }
+            
+            try {
+                await supabaseClient
+                    .from('tires')
+                    .update({ status: 'Repaired' })
+                    .eq('serial_number', serialNumber);
+                
+                alert(`✅ Tire ${serialNumber} marked as Repaired`);
+                
+                // Refresh inventory
+                await syncEnginePipeline();
+            } catch (e) {
+                alert(`❌ Error: ${e.message || 'Unknown error'}`);
+            }
+        }
 
         function renderInventoryGridOnly() {
             const tbody = document.getElementById('inventory-table-body');
@@ -1147,9 +1243,23 @@
             paginatedData.forEach(t => {
                 let badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-purple-950 text-purple-400 border border-purple-900/60">${t.status}</span>`;
                 if (t.status === "Brand New") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-emerald-950 text-emerald-400 border border-emerald-900/60">Brand New</span>`;
-                else if (t.status === "Warehouse Spare") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-blue-950 text-blue-400 border border-blue-900/60">Spare</span>`;
-                else if (t.status === "For Repair") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-amber-950 text-blue-500 border border-amber-900/60">For Repair</span>`;
+                else if (t.status === "Repaired") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-blue-950 text-blue-400 border border-blue-900/60">Repaired</span>`;
+                else if (t.status === "Warehouse Spare") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-cyan-950 text-cyan-400 border border-cyan-900/60">Spare</span>`;
+                else if (t.status === "For Repair") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-amber-950 text-amber-300 border border-amber-900/60">For Repair</span>`;
+                else if (t.status === "For Rotation") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-indigo-950 text-indigo-400 border border-indigo-900/60">Rotation</span>`;
+                else if (t.status === "For Evaluation") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-yellow-950 text-yellow-400 border border-yellow-900/60">Evaluation</span>`;
                 else if (t.status === "Scrapped Asset") badge = `<span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-rose-950 text-rose-400 border border-rose-900/60">Scrap</span>`;
+
+                let actionBtns = `<button onclick="openUpdateModal('${t.serial_number}')" class="bg-gray-800 hover:bg-blue-600 text-gray-300 hover:text-white px-2 py-0.5 rounded border border-gray-700 hover:border-blue-500 transition text-[10px] font-sans font-medium">
+                    <i class="fa-solid fa-sliders mr-1"></i>Edit
+                </button>`;
+                
+                // Add "Mark as Repaired" button for "For Repair" tires
+                if (t.status === "For Repair") {
+                    actionBtns += ` <button onclick="markTireAsRepaired('${t.serial_number}')" class="bg-green-700 hover:bg-green-600 text-white px-2 py-0.5 rounded border border-green-600 hover:border-green-500 transition text-[10px] font-sans font-medium ml-1">
+                        <i class="fa-solid fa-check mr-1"></i>Repaired
+                    </button>`;
+                }
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-100/40 border-b border-gray-200/60 transition";
@@ -1165,10 +1275,8 @@
                     <td class="p-2 text-gray-500 text-left">${Number(t.original_tread_depth || 0).toFixed(1)}</td>
                     <td class="p-2 text-gray-600 font-semibold text-left">${Number(t.remaining_tread_depth || 0).toFixed(1)}</td>
                     <td class="p-2 text-left">${badge}</td>
-                    <td class="p-1 text-center">
-                        <button onclick="openUpdateModal('${t.serial_number}')" class="bg-gray-800 hover:bg-amber-600 text-gray-300 hover:text-gray-950 px-2 py-0.5 rounded border border-gray-700 hover:border-blue-600 transition text-[10px] font-sans font-medium">
-                            <i class="fa-solid fa-sliders mr-1"></i>Edit
-                        </button>
+                    <td class="p-1 text-left space-x-1">
+                        ${actionBtns}
                     </td>
                 `;
                 tbody.appendChild(tr);
