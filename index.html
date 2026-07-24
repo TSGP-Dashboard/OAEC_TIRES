@@ -62,6 +62,9 @@
                 <button onclick="switchTab('fleet')" id="tab-btn-fleet" class="w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100">
                     <i class="fa-solid fa-truck-fleet w-4"></i><span>Active Deployments</span>
                 </button>
+                <button onclick="switchTab('inspection')" id="tab-btn-inspection" class="w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100">
+                    <i class="fa-solid fa-magnifying-glass w-4"></i><span>Tire Inspection</span>
+                </button>
             </nav>
 
             <!-- Dynamic Batch Intake Panel (Only Visible in Inventory Mode) -->
@@ -384,6 +387,84 @@
             </div>
             </div>
 
+            <!-- TIRE INSPECTION CANVAS -->
+            <div id="canvas-inspection" class="tab-canvas hidden space-y-4">
+                
+                <!-- TIRE INSPECTION FORM (Top) -->
+                <div class="bg-yellow-300 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <!-- Header -->
+                    <div class="bg-yellow-300 border-b border-gray-200 p-2 text-center text-xs font-bold tracking-widest text-gray-800 uppercase">
+                        Tire Inspection
+                    </div>
+
+                    <!-- Form Header Info -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-white border-b border-gray-200 text-[10px]">
+                        <div><span class="font-bold text-gray-600">Equipment:</span> <span id="insp-equip-num" class="text-blue-600 font-mono">--</span></div>
+                        <div><span class="font-bold text-gray-600">Size:</span> <span id="insp-equip-size" class="text-blue-600 font-mono">--</span></div>
+                        <div><span class="font-bold text-gray-600">Date:</span> <input type="date" id="insp-date" class="bg-white border border-gray-200 rounded px-1 py-0.5 font-mono text-[9px]"></div>
+                        <div><span class="font-bold text-gray-600">Current SMR/KM:</span> <input type="number" id="insp-current-smr" placeholder="Enter SMR" class="bg-white border border-gray-200 rounded px-1 py-0.5 font-mono text-[9px] w-full"></div>
+                    </div>
+
+                    <!-- Inspection Table -->
+                    <div class="overflow-x-auto p-2.5 bg-white">
+                        <table class="w-full border border-gray-200 text-[11px]">
+                            <thead>
+                                <tr class="bg-gray-100 border-b border-gray-200">
+                                    <th class="border border-gray-200 p-2 text-center font-bold text-gray-600">TIRE POSITION</th>
+                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">BRAND</th>
+                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">SERIAL/BRANDING</th>
+                                    <th class="border border-gray-200 p-2 text-center font-bold text-gray-600">REMAINING TREAD DEPTH (MM)</th>
+                                    <th class="border border-gray-200 p-2 text-left font-bold text-gray-600">OTHER FINDINGS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inspection-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div class="bg-white border-t border-gray-200 p-2 flex justify-end">
+                        <button onclick="saveInspection()" class="px-4 py-2 bg-blue-600 text-white rounded text-[11px] font-bold hover:bg-blue-700">
+                            SAVE INSPECTION
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIRE PERFORMANCE TABLE (Bottom) -->
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <!-- Header -->
+                    <div class="bg-blue-500 border-b border-gray-200 p-2 text-center text-xs font-bold tracking-widest text-white uppercase">
+                        Tire Performance Analysis
+                    </div>
+
+                    <!-- Performance Table -->
+                    <div class="overflow-x-auto p-2.5 bg-white">
+                        <table class="w-full border border-gray-200 text-[10px]">
+                            <thead>
+                                <tr class="bg-gray-100 border-b border-gray-200">
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">POS</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">BRAND</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">SERIAL</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">ACCUM HOURS</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">RTD (MM)</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">WEAR RATE</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">% WORN</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">REM HOURS</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">TOTAL HOURS</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">REM DAYS</th>
+                                    <th class="border border-gray-200 p-1 text-center font-bold text-gray-600">PROJ DATE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="performance-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </main>
 
@@ -575,12 +656,14 @@
             } else {
                 intakePanel.classList.add('hidden');
                 fleetSidePanel.classList.remove('hidden');
-                document.getElementById('fleet-unselected-placeholder').classList.remove('hidden');
-                document.getElementById('replacement-ledger-zone').classList.add('hidden');
+                if (tabId === 'fleet') {
+                    document.getElementById('fleet-unselected-placeholder').classList.remove('hidden');
+                    document.getElementById('replacement-ledger-zone').classList.add('hidden');
+                }
                 loadEquipmentForFleet();
             }
 
-            ['inventory', 'fleet'].forEach(t => {
+            ['inventory', 'fleet', 'inspection'].forEach(t => {
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if (t === tabId) btn.className = "w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 bg-amber-600 text-white";
                 else btn.className = "w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center space-x-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100";
@@ -1556,6 +1639,127 @@
                     syncEnginePipeline();
                 } catch(e) { alert(`Supabase Engine Failure: ${e.message}`); }
             }
+        }
+
+        function renderInspectionForm(equipmentNum, capacity, totalTires) {
+            // Set equipment info
+            document.getElementById('insp-equip-num').innerText = equipmentNum;
+            document.getElementById('insp-equip-size').innerText = 'N/A'; // Could enhance with size spec
+            document.getElementById('insp-date').value = getTodayDateString();
+            document.getElementById('insp-current-smr').value = '';
+            
+            // Get installed tires
+            const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
+            const tbody = document.getElementById('inspection-table-body');
+            tbody.innerHTML = '';
+            
+            // Create rows for all positions
+            const totalCapacity = capacity || 8;
+            for (let pos = 1; pos <= totalCapacity; pos++) {
+                const tire = installedTires.find(t => installedTires.indexOf(t) === pos - 1);
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-200 hover:bg-gray-50";
+                row.innerHTML = `
+                    <td class="border border-gray-200 p-2 text-center font-bold text-gray-700">${pos}</td>
+                    <td class="border border-gray-200 p-2 text-gray-600">${tire?.brand || '--'}</td>
+                    <td class="border border-gray-200 p-2 font-mono text-blue-600 text-[10px]">${tire?.serial_number || '--'}</td>
+                    <td class="border border-gray-200 p-2">
+                        <input type="number" step="0.1" id="rtd-pos-${pos}" placeholder="Enter RTD" class="w-full bg-white border border-gray-200 rounded px-1 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-400" value="${tire?.remaining_tread_depth || ''}">
+                    </td>
+                    <td class="border border-gray-200 p-2">
+                        <input type="text" id="findings-pos-${pos}" placeholder="Enter findings" class="w-full bg-white border border-gray-200 rounded px-1 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Calculate and display performance
+            calculateTirePerformance(equipmentNum, totalCapacity);
+        }
+        
+        function calculateTirePerformance(equipmentNum, capacity) {
+            const currentSmr = parseFloat(document.getElementById('insp-current-smr').value) || 0;
+            const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
+            const tbody = document.getElementById('performance-table-body');
+            tbody.innerHTML = '';
+            
+            const totalCapacity = capacity || 8;
+            for (let pos = 1; pos <= totalCapacity; pos++) {
+                const tire = installedTires.find(t => installedTires.indexOf(t) === pos - 1);
+                if (!tire) continue;
+                
+                const rtdInput = document.getElementById(`rtd-pos-${pos}`);
+                const currentRtd = parseFloat(rtdInput?.value) || tire?.remaining_tread_depth || 0;
+                
+                // Get installation SMR from tire_events table data or use 0 as fallback
+                const installationSmr = tire?.installation_smr || 0;
+                
+                // 1. Accumulated Hours = Current SMR - Installation SMR
+                const accumulatedHours = Math.max(0, currentSmr - installationSmr);
+                
+                // 2. Wear Rate = Accumulated Hours / RTD
+                const wearRate = currentRtd > 0 ? accumulatedHours / currentRtd : 0;
+                
+                // 3. Percentage Worn = (OTD - RTD) / OTD
+                // Assuming OTD (Original Tread Depth) is 32mm for most tires (default)
+                const originalTread = 32; // Default, could be stored in database
+                const percentWorn = ((originalTread - currentRtd) / originalTread) * 100;
+                
+                // 4. Remaining Hours = Wear Rate * RTD (projected)
+                const remainingHours = wearRate * currentRtd;
+                
+                // 5. Total Hours = Remaining Hours + Accumulated Hours
+                const totalHours = remainingHours + accumulatedHours;
+                
+                // 6. Projected Remaining Days = Remaining Hours / 6.5
+                const projectedDays = remainingHours / 6.5;
+                
+                // 7. Projected Removal Date = Today + Projected Days
+                const today = new Date();
+                const projectedDate = new Date(today.getTime() + projectedDays * 24 * 60 * 60 * 1000);
+                const projDateStr = projectedDate.toISOString().split('T')[0];
+                
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-200 hover:bg-gray-50";
+                row.innerHTML = `
+                    <td class="border border-gray-200 p-1 text-center font-bold">${pos}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${tire?.brand || '--'}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px] font-mono">${tire?.serial_number?.substring(0, 8) || '--'}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${accumulatedHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${currentRtd.toFixed(1)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${wearRate.toFixed(2)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px] font-semibold">${percentWorn.toFixed(1)}%</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${remainingHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${totalHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${projectedDays.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-1 text-center text-[9px]">${projDateStr}</td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+        
+        function saveInspection() {
+            const equipNum = document.getElementById('insp-equip-num').innerText;
+            const date = document.getElementById('insp-date').value;
+            const currentSmr = parseFloat(document.getElementById('insp-current-smr').value);
+            
+            if (!date || !currentSmr) {
+                alert('Please fill in Date and Current SMR/KM');
+                return;
+            }
+            
+            // Update RTD values for each tire in globalCachedTires
+            const installedTires = globalCachedTires.filter(t => t.status === equipNum);
+            installedTires.forEach((tire, index) => {
+                const pos = index + 1;
+                const rtdInput = document.getElementById(`rtd-pos-${pos}`);
+                if (rtdInput?.value) {
+                    tire.remaining_tread_depth = parseFloat(rtdInput.value);
+                }
+            });
+            
+            alert('✅ Inspection saved! Tire performance updated.');
+            calculateTirePerformance(equipNum, 8);
         }
 
         window.onload = () => { 
