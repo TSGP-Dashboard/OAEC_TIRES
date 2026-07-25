@@ -629,7 +629,7 @@
                 return equipList.map(eq => {
                     const equipNum = eq.equipment_num || 'N/A';
                     const tireCount = eq.total_tires || 0;
-                    return `<div data-equipment-num="${equipNum}" onclick="launchReplacementModule('${equipNum}', '${eq.category}', '', ${tireCount})" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-300 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
+                    return `<div data-equipment-num="${equipNum}" onclick="handleEquipmentSelection('${equipNum}', '${eq.category}', ${tireCount})" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 hover:border-blue-300 rounded flex justify-between items-center cursor-pointer transition font-mono text-[11px]">
                         <span class="text-blue-600 font-bold"><i class="fa-solid fa-truck-pickup mr-1 text-[9px]"></i>${equipNum}</span>
                         <span class="bg-gray-50 border border-gray-200 text-gray-600 px-1.5 py-0.2 rounded text-[10px] font-mono">${tireCount} Tires</span>
                     </div>`;
@@ -644,6 +644,7 @@
 
         function switchTab(tabId) {
             activeTab = tabId;
+            window.activeTab = tabId; // Set for cross-function access
             document.querySelectorAll('.tab-canvas').forEach(el => el.classList.add('hidden'));
             document.getElementById(`canvas-${tabId}`).classList.remove('hidden');
             
@@ -945,6 +946,14 @@
             }
         }
 
+        function handleEquipmentSelection(equipNum, category, tireCount) {
+            if (window.activeTab === 'inspection') {
+                renderInspectionForm(equipNum, tireCount, tireCount);
+            } else {
+                launchReplacementModule(equipNum, category, '', tireCount);
+            }
+        }
+        
         function launchReplacementModule(chassisId, groupClass, sizeSpec, tireCount) {
             document.getElementById('fleet-unselected-placeholder').classList.add('hidden');
             document.getElementById('replacement-ledger-zone').classList.remove('hidden');
@@ -1650,6 +1659,26 @@
             
             // Get installed tires
             const installedTires = globalCachedTires.filter(t => t.status === equipmentNum);
+            
+            // Fetch installation SMR for each tire from tire_events table
+            installedTires.forEach(async (tire) => {
+                try {
+                    const { data } = await supabaseClient
+                        .from('tire_events')
+                        .select('smr_odometer')
+                        .eq('serial_number', tire.serial_number)
+                        .eq('event_type', 'INSTALLED')
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    
+                    if (data && data.length > 0) {
+                        tire.installation_smr = data[0].smr_odometer;
+                    }
+                } catch (e) {
+                    console.log('Could not fetch installation SMR:', e.message);
+                }
+            });
+            
             const tbody = document.getElementById('inspection-table-body');
             tbody.innerHTML = '';
             
@@ -1673,8 +1702,26 @@
                 tbody.appendChild(row);
             }
             
-            // Calculate and display performance
-            calculateTirePerformance(equipmentNum, totalCapacity);
+            // Add event listener to SMR input to update performance on change
+            const smrInput = document.getElementById('insp-current-smr');
+            smrInput.addEventListener('change', () => {
+                calculateTirePerformance(equipmentNum, totalCapacity);
+            });
+            
+            // Add event listeners to RTD inputs to recalculate on change
+            for (let pos = 1; pos <= totalCapacity; pos++) {
+                const rtdInput = document.getElementById(`rtd-pos-${pos}`);
+                if (rtdInput) {
+                    rtdInput.addEventListener('change', () => {
+                        calculateTirePerformance(equipmentNum, totalCapacity);
+                    });
+                }
+            }
+            
+            // Calculate and display initial performance (with small delay to allow SMR fetch)
+            setTimeout(() => {
+                calculateTirePerformance(equipmentNum, totalCapacity);
+            }, 500);
         }
         
         function calculateTirePerformance(equipmentNum, capacity) {
@@ -1771,6 +1818,9 @@
             });
             document.getElementById('tab-btn-fleet').addEventListener('click', () => {
                 switchTab('fleet');
+            });
+            document.getElementById('tab-btn-inspection').addEventListener('click', () => {
+                switchTab('inspection');
             });
             
             // Equipment search filter
