@@ -51,10 +51,10 @@
     </header>
 
     <!-- Master Grid -->
-    <main class="w-full mx-auto px-3 mt-3 grid grid-cols-12 gap-2 h-[calc(100vh-150px)]">
+    <main class="w-full mx-auto px-3 mt-3 flex gap-2 h-[calc(100vh-150px)]">
         
         <!-- Navigation & Left Dynamic Context Panels (25%) - Independent Scrolling -->
-        <div class="col-span-3 min-w-0 space-y-3 overflow-y-auto pr-2">
+        <div class="w-1/4 flex-shrink-0 space-y-3 overflow-y-auto pr-2">
             <nav class="bg-gray-50 border border-gray-200 rounded-lg p-1 space-y-0.5">
                 <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="w-full text-left px-2 py-1 rounded text-[11px] font-medium transition flex items-center space-x-1 bg-amber-600 text-white">
                     <i class="fa-solid fa-boxes-stacked w-3"></i><span>Inventory</span>
@@ -106,10 +106,10 @@
         </div>
 
         <!-- Main Workspace Canvas Area (75%) - Independent Scrolling -->
-        <div class="col-span-9 min-w-0 space-y-4 overflow-y-auto pr-2">
+        <div class="flex-1 space-y-4 overflow-y-auto pr-2">
             
             <!-- CANVAS: INVENTORY -->
-            <div id="canvas-inventory" class="tab-canvas space-y-4">
+            <div id="canvas-inventory" class="tab-canvas w-full space-y-4">
                 
                 <!-- Metrics Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -241,7 +241,7 @@
             </div>
 
             <!-- CANVAS: ACTIVE FLEET DEPLOYMENTS & LIVE LEDGER WORKSHEET -->
-            <div id="canvas-fleet" class="tab-canvas hidden space-y-4">
+            <div id="canvas-fleet" class="tab-canvas hidden w-full space-y-4">
                 
                 <!-- Welcome/Unselected Structural Standby Placeholder Layer -->
                 <div id="fleet-unselected-placeholder" class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center space-y-3 shadow-sm">
@@ -388,10 +388,10 @@
             </div>
 
             <!-- TIRE INSPECTION CANVAS -->
-            <div id="canvas-inspection" class="tab-canvas hidden space-y-4">
+            <div id="canvas-inspection" class="tab-canvas w-full space-y-4">
                 
                 <!-- TIRE INSPECTION FORM (Top) -->
-                <div class="w-full bg-yellow-300 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div class="w-full bg-yellow-300 border border-gray-200 rounded-lg overflow-hidden shadow-sm flex flex-col">
                     <!-- Header -->
                     <div class="bg-yellow-300 border-b border-gray-200 p-2 text-center text-sm font-bold tracking-widest text-gray-800 uppercase">
                         TIRE INSPECTION FORM
@@ -432,7 +432,7 @@
                 </div>
 
                 <!-- TIRE PERFORMANCE TABLE (Bottom) -->
-                <div class="w-full bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <div class="w-full bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex flex-col">
                     <!-- Header -->
                     <div class="bg-blue-500 border-b border-gray-200 p-2 text-center text-sm font-bold tracking-widest text-white uppercase">
                         TIRE PERFORMANCE ANALYSIS
