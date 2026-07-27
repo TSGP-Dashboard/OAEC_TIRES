@@ -407,14 +407,14 @@
 
                     <!-- Inspection Table -->
                     <div class="overflow-x-auto p-1.5 bg-white">
-                        <table class="w-full border border-gray-200 text-[8px]">
+                        <table class="w-full border border-gray-200 text-[8px] table-fixed">
                             <thead>
                                 <tr class="bg-gray-100 border-b border-gray-200">
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">POS</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">BRAND</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">SERIAL</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">RTD</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">NOTES</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-8">POS</th>
+                                    <th class="border border-gray-200 p-0.5 text-left font-bold text-gray-600 whitespace-nowrap flex-1 min-w-20">BRAND</th>
+                                    <th class="border border-gray-200 p-0.5 text-left font-bold text-gray-600 whitespace-nowrap flex-1 min-w-24">SERIAL</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-12">RTD</th>
+                                    <th class="border border-gray-200 p-0.5 text-left font-bold text-gray-600 whitespace-nowrap flex-1">NOTES</th>
                                 </tr>
                             </thead>
                             <tbody id="inspection-table-body">
@@ -440,20 +440,20 @@
 
                     <!-- Performance Table -->
                     <div class="overflow-x-auto p-1.5 bg-white">
-                        <table class="w-full border border-gray-200 text-[8px]">
+                        <table class="w-full border border-gray-200 text-[8px] table-fixed">
                             <thead>
                                 <tr class="bg-gray-100 border-b border-gray-200">
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">POS</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">BRAND</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">SN</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">HRS</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">RTD</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">RATE</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">%</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">REM</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">TOT</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">DAYS</th>
-                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap">DATE</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-8">POS</th>
+                                    <th class="border border-gray-200 p-0.5 text-left font-bold text-gray-600 whitespace-nowrap min-w-16">BRAND</th>
+                                    <th class="border border-gray-200 p-0.5 text-left font-bold text-gray-600 whitespace-nowrap min-w-20">SN</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-10">HRS</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-8">RTD</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-10">RATE</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-8">%</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-10">REM</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-10">TOT</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-9">DAYS</th>
+                                    <th class="border border-gray-200 p-0.5 text-center font-bold text-gray-600 whitespace-nowrap w-16">DATE</th>
                                 </tr>
                             </thead>
                             <tbody id="performance-table-body">
@@ -1689,14 +1689,14 @@
                 const row = document.createElement('tr');
                 row.className = "border-b border-gray-200 hover:bg-gray-50";
                 row.innerHTML = `
-                    <td class="border border-gray-200 p-0.5 text-center font-bold text-gray-700 text-[8px]">${pos}</td>
-                    <td class="border border-gray-200 p-0.5 text-gray-600 text-[8px]">${tire?.brand || '--'}</td>
-                    <td class="border border-gray-200 p-0.5 font-mono text-blue-600 text-[7px]">${tire?.serial_number?.substring(0, 6) || '--'}</td>
-                    <td class="border border-gray-200 p-0.5">
+                    <td class="border border-gray-200 p-0.5 text-center font-bold text-gray-700 text-[8px] w-8">${pos}</td>
+                    <td class="border border-gray-200 p-0.5 text-gray-600 text-[8px] text-left break-words min-w-20 flex-1">${tire?.brand || '--'}</td>
+                    <td class="border border-gray-200 p-0.5 font-mono text-blue-600 text-[7px] text-left break-all min-w-24 flex-1">${tire?.serial_number || '--'}</td>
+                    <td class="border border-gray-200 p-0.5 w-12">
                         <input type="number" step="0.1" id="rtd-pos-${pos}" placeholder="RTD" class="w-full bg-white border border-gray-200 rounded px-0.5 py-0.25 text-[7px] focus:outline-none focus:ring-1 focus:ring-blue-400" value="${tire?.remaining_tread_depth || ''}">
                     </td>
-                    <td class="border border-gray-200 p-0.5">
-                        <input type="text" id="findings-pos-${pos}" placeholder="Note" class="w-full bg-white border border-gray-200 rounded px-0.5 py-0.25 text-[7px] focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    <td class="border border-gray-200 p-0.5 flex-1">
+                        <input type="text" id="findings-pos-${pos}" placeholder="Enter notes..." class="w-full bg-white border border-gray-200 rounded px-0.5 py-0.25 text-[7px] focus:outline-none focus:ring-1 focus:ring-blue-400">
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -1769,17 +1769,17 @@
                 const row = document.createElement('tr');
                 row.className = "border-b border-gray-200 hover:bg-gray-50";
                 row.innerHTML = `
-                    <td class="border border-gray-200 p-0.5 text-center font-bold text-[7px]">${pos}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${tire?.brand?.substring(0, 4) || '--'}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px] font-mono">${tire?.serial_number?.substring(0, 5) || '--'}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${accumulatedHours.toFixed(0)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${currentRtd.toFixed(1)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${wearRate.toFixed(1)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px] font-semibold">${percentWorn.toFixed(0)}%</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${remainingHours.toFixed(0)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${totalHours.toFixed(0)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${projectedDays.toFixed(0)}</td>
-                    <td class="border border-gray-200 p-0.5 text-center text-[7px]">${projDateStr}</td>
+                    <td class="border border-gray-200 p-0.5 text-center font-bold text-[7px] w-8">${pos}</td>
+                    <td class="border border-gray-200 p-0.5 text-left text-[7px] min-w-16 break-words">${tire?.brand || '--'}</td>
+                    <td class="border border-gray-200 p-0.5 text-left text-[7px] font-mono min-w-20 break-all">${tire?.serial_number || '--'}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-10">${accumulatedHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-8">${currentRtd.toFixed(1)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-10">${wearRate.toFixed(1)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] font-semibold w-8">${percentWorn.toFixed(0)}%</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-10">${remainingHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-10">${totalHours.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-9">${projectedDays.toFixed(0)}</td>
+                    <td class="border border-gray-200 p-0.5 text-center text-[7px] w-16">${projDateStr}</td>
                 `;
                 tbody.appendChild(row);
             }
